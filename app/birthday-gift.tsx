@@ -1,0 +1,79 @@
+"use client";
+import {useCallback,useEffect,useRef,useState, type CSSProperties} from 'react';
+import {Heart,Mail,Images,Sparkles,ArrowRight,ArrowLeft,Upload,Check,LockKeyhole,Settings2,RefreshCw,Play,BookOpen,ImagePlus} from 'lucide-react';
+import {Tabs,TabsList,TabsTrigger,TabsContent} from '@/components/ui/tabs';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Switch} from '@/components/ui/switch';
+import {Progress} from '@/components/ui/progress';
+import {Dialog,DialogContent,DialogDescription,DialogTitle} from '@/components/ui/dialog';
+import {Label} from '@/components/ui/label';
+import {Toaster,toast} from 'sonner';
+import {Photo} from '@/lib/models';
+import {request} from '@/lib/wish-drafts';
+import {poemSets,Poem} from '@/lib/poems';
+import {Choice} from './gift-controls';
+import MemoryArchive from './memory-archive';
+import Wishes from './wishes';
+import './letter-effects.css';
+
+type Question={title:string;text:string;success:string};
+type Preferences={poetry:boolean;envelope:boolean;sets:string[]};
+const defaultPrefs:Preferences={poetry:true,envelope:true,sets:Array(6).fill('original')};
+const themes=['相遇','靠近','告白','初見','家人','一生'];
+export default function BirthdayGift({questions}:{questions:Question[]}){
+ const [tab,setTab]=useState('letter'),[photos,setPhotos]=useState<Photo[]>([]),[photoError,setPhotoError]=useState(''),[photoLoading,setPhotoLoading]=useState(true);
+ const [unlocked,setUnlocked]=useState(0),[journeyError,setJourneyError]=useState(''),[opened,setOpened]=useState(false),[index,setIndex]=useState(0),[answer,setAnswer]=useState(''),[busy,setBusy]=useState(false),[feedback,setFeedback]=useState(''),[correct,setCorrect]=useState(false);
+ const [prefs,setPrefs]=useState(defaultPrefs),[settings,setSettings]=useState(false),[poemVisible,setPoemVisible]=useState(false),[envelope,setEnvelope]=useState(false),[flap,setFlap]=useState(false),[cinema,setCinema]=useState(false),[videoBusy,setVideoBusy]=useState(false);
+ const answerRef=useRef<HTMLInputElement>(null),videoUpload=useRef<HTMLInputElement>(null);
+ const [ready,setReady]=useState(false),[reducedMotion,setReducedMotion]=useState(false);
+ const photo=photos.find(p=>p.kind==='photo'&&p.slot===index),video=photos.find(p=>p.kind==='video');
+ const poem=(poemSets.find(s=>s.id===prefs.sets[index])||poemSets[0]).poems[index];
+ const refreshPhotos=useCallback(async()=>{try{const r=await request('/api/photos');setPhotos(r.photos);setPhotoError('');}catch(e){setPhotoError((e as Error).message);}finally{setPhotoLoading(false);}},[]);
+ const refreshJourney=useCallback(async()=>{try{const r=await request('/api/journey');setUnlocked(r.unlocked);setIndex(i=>Math.min(i,r.unlocked,5));setJourneyError('');}catch(e){setJourneyError((e as Error).message);}},[]);
+ useEffect(()=>{refreshPhotos();refreshJourney();const hash=location.hash.slice(1);if(['letter','memories','wishes'].includes(hash))setTab(hash);try{const p=JSON.parse(localStorage.getItem('yc-display-preferences')||'null');if(p&&Array.isArray(p.sets)&&p.sets.length===6&&p.sets.every((s:string)=>poemSets.some(x=>x.id===s)))setPrefs({poetry:p.poetry!==false,envelope:p.envelope!==false,sets:p.sets});}catch{}setReducedMotion(matchMedia('(prefers-reduced-motion: reduce)').matches);setReady(true);const focus=()=>{refreshPhotos();refreshJourney();};window.addEventListener('focus',focus);return()=>window.removeEventListener('focus',focus);},[refreshPhotos,refreshJourney]);
+ useEffect(()=>{if(ready)try{localStorage.setItem('yc-display-preferences',JSON.stringify(prefs));}catch{}},[prefs,ready]);
+ useEffect(()=>{if(!envelope)return;const f=setTimeout(()=>setFlap(true),reducedMotion?0:150);const end=setTimeout(()=>{setEnvelope(false);setOpened(true);setIndex(Math.min(unlocked,5));},reducedMotion?100:2050);return()=>{clearTimeout(f);clearTimeout(end);};},[envelope,reducedMotion,unlocked]);
+ useEffect(()=>{setAnswer('');setFeedback('');setCorrect(false);setPoemVisible(false);},[index]);
+ useEffect(()=>{if(opened&&tab==='letter'&&!envelope)answerRef.current?.focus({preventScroll:true});},[opened,tab,envelope,index]);
+ function navigate(value:string){setTab(value);history.replaceState(null,'','#'+value);setPoemVisible(false);}
+ function openLetter(){if(prefs.envelope&&!reducedMotion){setFlap(false);setEnvelope(true);}else{setOpened(true);setIndex(Math.min(unlocked,5));}}
+ async function checkAnswer(e:React.FormEvent){e.preventDefault();if(busy)return;setBusy(true);try{const r=await request('/api/journey',{method:'POST',body:JSON.stringify({index,answer})});setFeedback(r.feedback);setCorrect(r.correct);setUnlocked(r.unlocked);setJourneyError('');if(r.correct&&prefs.poetry)setPoemVisible(true);if(!r.correct)answerRef.current?.select();}catch(e){setFeedback((e as Error).message);setCorrect(false);}finally{setBusy(false);}}
+ async function uploadVideo(file?:File){if(!file)return;if(file.type!=='video/mp4'||file.size>24*1024*1024){toast.error('Choose an MP4 up to 24 MB.');return;}setVideoBusy(true);try{await request('/api/photos',{method:'POST',body:file,headers:{'Content-Type':file.type,'X-File-Name':encodeURIComponent(file.name)}});await refreshPhotos();toast.success('Your surprise video is ready.');}catch(e){toast.error((e as Error).message);}finally{setVideoBusy(false);if(videoUpload.current)videoUpload.current.value='';}}
+ const solved=index<unlocked;
+ return <div className="gift-app">
+  <a className="skip-link" href="#main">Skip to content</a>
+  <Toaster position="bottom-center" richColors/>
+  <header className="masthead"><button className="monogram" onClick={()=>navigate('letter')} aria-label="Back to our love letter">Y <Heart size={14} fill="currentColor"/> C</button><span className="masthead-note">a little world, just for us</span><Button variant="ghost" className="settings-button" onClick={()=>setSettings(true)}><Settings2 size={17}/><span>Letter settings</span></Button></header>
+  <main id="main" className="gift-shell">
+   <Tabs value={tab} onValueChange={navigate}>
+    <div className="page-heading"><div><p className="eyebrow">YULIYA × CHIH-HSING</p><h1>Our little <em>forever.</em></h1></div><p className="heading-note">The moments we keep.<br/>The days we have yet to dream.</p></div>
+    <TabsList className="main-tabs" aria-label="Our little world"><TabsTrigger value="letter"><Mail/>Love letter <span lang="zh-Hant">情書</span></TabsTrigger><TabsTrigger value="memories"><Images/>Memories <span lang="zh-Hant">記憶庫</span></TabsTrigger><TabsTrigger value="wishes"><Sparkles/>Wishes <span lang="zh-Hant">願望</span></TabsTrigger></TabsList>
+    <TabsContent value="letter" forceMount className="tab-panel letter-tab">
+     {!opened?<section className="letter-cover"><div className="cover-copy"><p className="eyebrow">FOR YOUR BIRTHDAY, AND ALL THE DAYS AFTER</p><h2>Some stories begin<br/>with <em>coincidence.</em></h2><p>The best ones keep choosing each other.</p><Button size="lg" className="primary-action" onClick={openLetter}><Mail/> {unlocked>0?'Continue our love letter':'Open our love letter'}<ArrowRight/></Button><p className="quiet">Six photographs. Six questions. One last surprise.</p>{unlocked>0&&<span className="small-meta">{unlocked} of 6 memories already unlocked</span>}</div><div className="cover-inscription" lang="zh-Hant"><span>山有木兮木有枝</span><span>心悅君兮君不知</span><small>Y & C</small></div></section>:
+     <section className="letter-journey" aria-label="Our six memories">
+      <div className="section-top"><div><p className="eyebrow">OUR LOVE LETTER</p><h2>A little lock on every memory.</h2></div><div className="effect-switch"><Label htmlFor="poetry-switch">Poetry · 墨</Label><Switch id="poetry-switch" checked={prefs.poetry} onCheckedChange={v=>{setPrefs(p=>({...p,poetry:v}));if(!v)setPoemVisible(false);}}/></div></div>
+      {journeyError&&<div className="error-banner" role="alert">{journeyError}<Button variant="outline" onClick={refreshJourney}>Retry</Button></div>}
+      <div className="chapter-nav" aria-label="Memory chapters">{questions.map((q,i)=><button key={q.title} disabled={i>unlocked||busy} onClick={()=>setIndex(i)} aria-current={i===index?'step':undefined} aria-label={`${q.title}${i>unlocked?' · locked':''}`} className={i===index?'current':i<unlocked?'done':''}><span>{i<unlocked?<Check size={16}/>:String(i+1).padStart(2,'0')}</span><small lang="zh-Hant">{themes[i]}</small></button>)}</div><Progress className="journey-progress" value={unlocked/6*100} aria-label={`${unlocked} of 6 memories unlocked`}/>
+      <article className="journey-spread" key={index}><div className="journey-photo-side"><div className="journey-photo">{photo?<img src={'/api/media/'+photo.id} alt={photo.title} decoding="async"/>:<div className="unfilled-memory"><span className="large-number">0{index+1}</span><ImagePlus size={25}/><p>A place for this memory</p><Button variant="outline" onClick={()=>navigate('memories')}>Choose a photograph</Button></div>}<span className="photo-counter">0{index+1} / 06</span>{poemVisible&&<div className="poetry-overlay" role="region" aria-label="Unlocked poem"><Poetry poem={poem}/><Button variant="outline" className="poetry-dismiss" onClick={()=>setPoemVisible(false)}>收卷 · Return to photo</Button></div>}</div><p className="photo-caption">{photo?.note||photo?.title||questions[index].title.replace(/^\d\. /,'')}</p></div>
+       <div className="question-side"><p className="eyebrow">MEMORY 0{index+1} <span lang="zh-Hant">／{themes[index]}</span></p><h3>{questions[index].title.replace(/^\d\. /,'')}</h3><p className="question-text">{questions[index].text}</p>{!solved?<form onSubmit={checkAnswer}><Label htmlFor="answer">Your answer</Label><div className="answer-row"><Input ref={answerRef} id="answer" value={answer} onChange={e=>{setAnswer(e.target.value);setFeedback('');}} placeholder={index===1?'YYYY/MM/DD':'Type it here…'} autoComplete="off" maxLength={500} disabled={busy}/><Button type="submit" disabled={busy}>{busy?'Checking…':'Unlock'}<LockKeyhole size={15}/></Button></div></form>:<div className="unlocked-label"><Check size={19}/> This memory is yours.</div>}
+       <div className={'answer-feedback '+(correct||solved?'success':'')} aria-live="polite">{feedback||(solved?questions[index].success:'')}</div>
+       {solved&&<div className="question-next"><Button size="lg" onClick={()=>{setPoemVisible(false);if(index===5)setCinema(true);else setIndex(index+1);}}>{index===5?'Open the final surprise':'Turn the page'}<ArrowRight/></Button><Button variant="ghost" onClick={()=>setPoemVisible(v=>!v)}><BookOpen size={16}/>Read the poem</Button></div>}
+       </div></article><p className="under-letter">Six answers. Countless memories still to come.</p>
+     </section>}
+     {photoError&&!opened&&<p className="small-meta">Your letter is ready. Open Memories to connect the photographs.</p>}
+    </TabsContent>
+    <TabsContent value="memories" forceMount className="tab-panel"><MemoryArchive photos={photos.filter(p=>p.kind==='photo')} loading={photoLoading} error={photoError} refresh={refreshPhotos}/></TabsContent>
+    <TabsContent value="wishes" forceMount className="tab-panel"><Wishes active={tab==='wishes'}/></TabsContent>
+   </Tabs>
+  </main>
+  <footer className="gift-footer"><span>Yuliya <Heart size={12}/> Chih-hsing</span><span>To be continued, together.</span></footer>
+  <Dialog open={envelope} onOpenChange={v=>{if(!v){setEnvelope(false);setOpened(true);}}}><DialogContent className="envelope-dialog"><DialogTitle className="sr-only">Opening our love letter</DialogTitle><DialogDescription className="sr-only">A letter opens to reveal your first memory.</DialogDescription><div className="envelope-scene" aria-hidden="true"><div className={'envelope '+(flap?'open':'')}><div className="letter-sheet"><div className="letter-monogram">Y ♥ C</div><p>Six memories,<br/>kept just for us.</p></div><div className="envelope-back"/><div className="envelope-front front-left"/><div className="envelope-front front-right"/><div className="envelope-front front-bottom"/><div className="envelope-flap"/><div className="wax-seal">♥</div></div></div><Button variant="ghost" onClick={()=>{setEnvelope(false);setOpened(true);}}>Open now</Button></DialogContent></Dialog>
+  <Dialog open={settings} onOpenChange={setSettings}><DialogContent className="settings-dialog"><DialogTitle>Make the letter your own</DialogTitle><DialogDescription>Choose a whole poetry set, or mix one verse for each memory. These display choices are remembered on this device.</DialogDescription><div className="settings-switches"><div className="effect-switch"><Label htmlFor="envelope-setting">Envelope opening</Label><Switch id="envelope-setting" checked={prefs.envelope} onCheckedChange={v=>setPrefs(p=>({...p,envelope:v}))}/></div><div className="effect-switch"><Label htmlFor="poem-setting">Poetry animation</Label><Switch id="poem-setting" checked={prefs.poetry} onCheckedChange={v=>setPrefs(p=>({...p,poetry:v}))}/></div></div><Choice label="Apply a full set" value={prefs.sets.every(s=>s===prefs.sets[0])?prefs.sets[0]:'mixed'} options={[{value:'mixed',label:'Mix & match · 自選'},...poemSets.map(s=>({value:s.id,label:s.label}))]} onChange={v=>{if(v!=='mixed')setPrefs(p=>({...p,sets:Array(6).fill(v)}));}}/>
+   <div className="poem-picker">{questions.map((q,i)=>{const current=poemSets.find(s=>s.id===prefs.sets[i])||poemSets[0];return <div className="poem-choice" key={i}><Choice label={`0${i+1} · ${themes[i]}`} value={prefs.sets[i]} options={poemSets.map(s=>({value:s.id,label:s.label}))} onChange={v=>setPrefs(p=>({...p,sets:p.sets.map((s,n)=>n===i?v:s)}))}/><p lang="zh-Hant">{current.poems[i].lines.join('，')}。</p><small>{current.poems[i].source}</small></div>;})}</div>
+   <div className="video-setting"><h3>Final surprise</h3><p className="quiet">{video?'A video is ready. Uploading another makes it the final surprise.':'Add the video that plays after the sixth answer.'}</p><input ref={videoUpload} type="file" accept="video/mp4" className="sr-only" onChange={e=>uploadVideo(e.target.files?.[0])}/><Button variant="outline" disabled={videoBusy} onClick={()=>videoUpload.current?.click()}><Upload size={16}/>{videoBusy?'Uploading…':video?'Replace surprise video':'Add surprise video'}</Button><small>MP4 · up to 24 MB</small></div>
+  </DialogContent></Dialog>
+  <Dialog open={cinema} onOpenChange={setCinema}><DialogContent className="cinema-dialog"><div className="cinema-curtain curtain-left" aria-hidden="true"/><div className="cinema-curtain curtain-right" aria-hidden="true"/><DialogTitle>For all our tomorrows.</DialogTitle><DialogDescription>You are the best thing that has happened in my life.</DialogDescription>{video?<video controls playsInline preload="metadata" src={'/api/media/'+video.id} onError={()=>toast.error('This video could not play. Try an MP4 encoded with H.264.')}/>:<div className="cinema-empty"><Heart size={48}/><p>Your final video has not been added yet.</p><Button onClick={()=>{setCinema(false);setSettings(true);}}>Add the surprise video</Button></div>}<Button variant="outline" onClick={()=>{setCinema(false);navigate('wishes');}}>What shall we dream of next?<Sparkles size={17}/></Button></DialogContent></Dialog>
+ </div>;
+}
+function Poetry({poem}:{poem:Poem}){return <div className="poetry-content" lang="zh-Hant"><div className="poetry-lines">{poem.lines.map((line,n)=><p key={line} className="poetry-line">{[...line].map((c,i)=><span key={i} style={{'--delay':`${n*.25+i*.075}s`} as CSSProperties}>{c}</span>)}</p>)}</div><p className="poetry-source">{poem.source}</p></div>;}
