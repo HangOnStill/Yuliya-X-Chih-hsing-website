@@ -26,7 +26,7 @@ export default function GiftSidebar({tab,navigate,settings}:{tab:string;navigate
  function go(id:string){navigate(id);setOpenMobile(false);}
  function hide(){if(isMobile)setOpenMobile(false);else{setOpen(false);document.getElementById('gift-navigation-toggle')?.focus();}}
  return <Sidebar className="gift-sidebar" collapsible="offcanvas">
-  <SidebarHeader><div className="sidebar-brand"><button onClick={()=>go('letter')} aria-label="Our love letter">Y<span>X</span>C</button><Button size="icon" variant="ghost" className="sidebar-hide" aria-label="Hide sidebar · 隱藏側欄" title="Hide sidebar · 隱藏側欄" onClick={hide}>{isMobile?<X/>:<PanelLeftClose/>}</Button></div><p>Yuliya × Chih-hsing</p></SidebarHeader>
+  <SidebarHeader><div className="sidebar-brand"><button onClick={()=>go('letter')} aria-label="Our love letter">Y<span>♥</span>C</button><Button size="icon" variant="ghost" className="sidebar-hide" aria-label="Hide sidebar · 隱藏側欄" title="Hide sidebar · 隱藏側欄" onClick={hide}>{isMobile?<X/>:<PanelLeftClose/>}</Button></div><p>Yuliya × Chih-hsing</p></SidebarHeader>
   <SidebarContent id="gift-navigation"><SidebarMenu aria-label="Our world">{items.map(([id,en,zh,Icon])=><SidebarMenuItem key={id}><SidebarMenuButton onClick={()=>go(id)} isActive={tab===id} aria-current={tab===id?'page':undefined}><Icon/><span>{en}<small lang="zh-Hant">{zh}</small></span></SidebarMenuButton></SidebarMenuItem>)}</SidebarMenu></SidebarContent>
   <SidebarFooter><SidebarMenuButton onClick={()=>{setOpenMobile(false);settings();}}><Settings2/><span>Letter settings <small>情書設定</small></span></SidebarMenuButton><p className="sidebar-whisper"><Heart size={12}/> To be continued, together.</p></SidebarFooter>
  </Sidebar>;

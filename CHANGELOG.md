@@ -1,3 +1,8 @@
+## V5.1 — heart monogram refinement
+
+- Match the navigation brand and browser favicon to the preferred burgundy Y / rose heart / C design.
+- Clarify that GitHub Marketplace Actions are unrelated to the ChatGPT connection, and app permissions are not editable token scopes.
+
 # Changelog
 
 ## 5.1.0 — 2026-09-10

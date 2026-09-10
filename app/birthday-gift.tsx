@@ -55,7 +55,7 @@ export default function BirthdayGift({questions}:{questions:Question[]}){
  return <SidebarProvider open={prefs.sidebarOpen} onOpenChange={sidebarOpen=>setPrefs(p=>({...p,sidebarOpen}))} className="v5-app" style={{"--sidebar-width":"15rem"} as CSSProperties}><GiftSidebar tab={tab} navigate={navigate} settings={()=>setSettings(true)}/><div className="gift-app">
   <a className="skip-link" href="#main">Skip to content</a>
   <Toaster position="bottom-center" richColors/>
-  <header className="masthead"><div className="nav-start"><GiftSidebarToggle/><button className="monogram" onClick={()=>navigate('letter')} aria-label="Back to our love letter">Y<span aria-hidden="true">X</span>C</button></div><span className="masthead-note">Six memories · one love letter</span><Button variant="outline" onClick={()=>{navigate('letter');openLetter();}}>Open letter</Button></header>
+  <header className="masthead"><div className="nav-start"><GiftSidebarToggle/><button className="monogram" onClick={()=>navigate('letter')} aria-label="Back to our love letter">Y<span aria-hidden="true">♥</span>C</button></div><span className="masthead-note">Six memories · one love letter</span><Button variant="outline" onClick={()=>{navigate('letter');openLetter();}}>Open letter</Button></header>
   <main id="main" className="gift-shell">
    <div className="view-stack">
     <section hidden={tab!=='letter'} className="tab-panel letter-tab">
