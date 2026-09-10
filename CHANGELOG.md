@@ -1,3 +1,10 @@
+## V5.2 — stronger hearts and mobile refinement
+
+- Increase heart size, contrast and density, and clarify their silhouettes through the letter card.
+- Use fewer particles on phones; honor reduced-motion preferences.
+- Improve phone headers, touch controls, form readability, safe-area spacing, photo viewing and dialogs.
+- Avoid automatically opening the mobile keyboard when the love letter opens.
+
 ## V5.2 — public viewing and V3 background
 
 - Start with the sidebar hidden on every visit.

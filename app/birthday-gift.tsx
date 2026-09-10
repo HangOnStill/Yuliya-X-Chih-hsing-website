@@ -47,7 +47,7 @@ export default function BirthdayGift({questions,canEdit=false,signInUrl,signedIn
  useEffect(()=>{if(ready)try{localStorage.setItem('yc-display-preferences',JSON.stringify(prefs));}catch{}},[prefs,ready]);
  useEffect(()=>{if(!envelope)return;const f=setTimeout(()=>setFlap(true),reducedMotion?0:150);const end=setTimeout(()=>{setEnvelope(false);setOpened(true);setIndex(Math.min(unlocked,5));},reducedMotion?100:2050);return()=>{clearTimeout(f);clearTimeout(end);};},[envelope,reducedMotion,unlocked]);
  useEffect(()=>{setAnswer('');setFeedback('');setCorrect(false);setPoemVisible(false);},[index]);
- useEffect(()=>{if(opened&&tab==='letter'&&!envelope)answerRef.current?.focus({preventScroll:true});},[opened,tab,envelope,index]);
+ useEffect(()=>{if(opened&&tab==='letter'&&!envelope&&matchMedia('(pointer: fine)').matches)answerRef.current?.focus({preventScroll:true});},[opened,tab,envelope,index]);
  function navigate(value:string){setTab(value);history.replaceState(null,'','#'+value);setPoemVisible(false);window.scrollTo({top:0,behavior:'instant'});}
  useEffect(()=>{if(opened&&tab==='letter'&&!envelope){const t=setTimeout(()=>journeyRef.current?.scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'start'}),80);return()=>clearTimeout(t);}},[opened,envelope,index,reducedMotion]);
  function openLetter(){if(opened){setTimeout(()=>journeyRef.current?.scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'start'}),80);return;}if(prefs.envelope&&!reducedMotion){setFlap(false);setEnvelope(true);}else{setOpened(true);setIndex(Math.min(unlocked,5));}}
@@ -59,7 +59,7 @@ export default function BirthdayGift({questions,canEdit=false,signInUrl,signedIn
   <Toaster position="bottom-center" richColors/>
   <header className="masthead"><div className="nav-start"><GiftSidebarToggle/><button className="monogram" onClick={()=>navigate('letter')} aria-label="Back to our love letter">Y<span aria-hidden="true">♥</span>C</button></div><span className="masthead-note">Six memories · one love letter</span><Button variant="outline" onClick={()=>{navigate('letter');openLetter();}}>Open letter</Button></header>
   {!canEdit&&<div className="guest-note"><span>Enjoy our letter and memories. Editing is reserved for us.</span>{!signedIn&&<a href={signInUrl} target="_top">Sign in to edit</a>}</div>}
-  {tab==='letter'&&<div className="ambient-hearts" aria-hidden="true">{Array.from({length:14},(_,i)=><span key={i} className="ambient-heart" style={{left:`${(i*37+7)%100}%`,"--size":`${8+(i*7)%17}px`,"--duration":`${13+(i*11)%16}s`,"--delay":`${-(i*5)%22}s`} as CSSProperties}>♥</span>)}</div>}
+  {tab==='letter'&&<div className="ambient-hearts" aria-hidden="true">{Array.from({length:26},(_,i)=><span key={i} className="ambient-heart" style={{left:`${(i*37+7)%100}%`,"--size":`${i%5===0?58:22+(i*7)%29}px`,"--duration":`${12+(i*7)%12}s`,"--delay":`${-((i*7)%24)-1}s`,"--drift":`${(i%2?1:-1)*(18+(i*9)%38)}px`} as CSSProperties}>♥</span>)}</div>}
   <main id="main" className="gift-shell">
    <div className="view-stack">
     <section hidden={tab!=='letter'} className="tab-panel letter-tab">

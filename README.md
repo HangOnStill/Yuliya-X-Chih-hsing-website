@@ -6,7 +6,7 @@ A love letter first, and a home for the memories and wishes that follow.
 
 V5 brings back V3's centered letter, animated heart, clean layout and gentle scroll when opening the envelope, with V4's photo archive, wish organizer and letter settings. The love letter is the default page; other spaces live in a responsive sidebar. The heart uses the original CSS animation, so no GIF download is needed. Reduced-motion preferences are respected.
 
-The header has a visible hide/show sidebar button. The sidebar starts hidden on every visit. V3's fourteen softly floating background hearts return on the Love Letter page. The sidebar order starts with Love letter → Memories → Keepsakes → Wishes → Our nicknames. Ctrl/⌘ + B also toggles the sidebar outside text-entry fields.
+The header has a visible hide/show sidebar button. The sidebar starts hidden on every visit. The Love Letter page uses 26 more visible rose-colored floating hearts (18 on phones), with varied sizes and gentle sideways drift. Phone layouts include 44–48 px touch targets, stacked narrow forms, safe-area spacing, and scrollable dialogs. Opening the letter does not automatically raise a phone's keyboard. The sidebar order starts with Love letter → Memories → Keepsakes → Wishes → Our nicknames. Ctrl/⌘ + B also toggles the sidebar outside text-entry fields.
 
 ## Included features
 
