@@ -38,7 +38,7 @@ try{
  const rows=(await result(await photos.GET(req('/api/photos')))).photos;assert.equal(rows.find(p=>p.id===saved.id).slot,null);assert.equal(rows.find(p=>p.id===second.id).slot,0);checks+=2;
  const bytes=await media.GET(req('/api/media/'+saved.id,'GET',undefined,{range:'bytes=0-3'}),context);assert.equal(bytes.status,206);assert.equal((await bytes.arrayBuffer()).byteLength,4);checks+=2;
  await result(await journey.POST(req('/api/journey','POST',{index:3,answer:'hospital'})),400);
- const answers=['Vistopia','2026-5-21','marriage','hospital','知足常越','lifetime'];for(let i=0;i<6;i++){const r=await result(await journey.POST(req('/api/journey','POST',{index:i,answer:answers[i]})));assert.equal(r.correct,true);assert.equal(r.unlocked,i+1);checks+=2;}
+ const answers=['Vistopia','2026-5-21','陳丹青','hospital','知足常越','lifetime'];for(let i=0;i<6;i++){const r=await result(await journey.POST(req('/api/journey','POST',{index:i,answer:answers[i]})));assert.equal(r.correct,true);assert.equal(r.unlocked,i+1);checks+=2;}
  assert.equal((await result(await journey.GET(req('/api/journey')))).unlocked,6);checks++;
 
  const entries=await module('app/api/entries/route.ts','entries'),assets=await module('app/api/assets/route.ts','assets'),asset=await module('app/api/assets/[id]/route.ts','asset'),backup=await module('app/api/backup/route.ts','backup'),planner=await module('lib/life-plan.ts','planner');
