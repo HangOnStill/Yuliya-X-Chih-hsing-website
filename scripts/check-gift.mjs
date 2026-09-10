@@ -43,6 +43,16 @@ try{
 
  const entries=await module('app/api/entries/route.ts','entries'),assets=await module('app/api/assets/route.ts','assets'),asset=await module('app/api/assets/[id]/route.ts','asset'),backup=await module('app/api/backup/route.ts','backup'),planner=await module('lib/life-plan.ts','planner');
  await result(await entries.GET(new Request('https://gift.test/api/entries')),401);
+ const nicknameA={id:crypto.randomUUID(),kind:'nickname',data:{name:'Test nickname A',person:'Yuliya',since:'2026-09-10',origin:'A test origin, not real personal history.',funnyMoment:'測試趣事\nSecond line 🙂'}};
+ const nicknameB={...nicknameA,id:crypto.randomUUID(),data:{...nicknameA.data,name:'Test nickname B',person:'Chih-hsing',since:''}};
+ const savedNicknameA=(await result(await entries.POST(req('/api/entries','POST',nicknameA)),201)).entry;
+ const savedNicknameB=(await result(await entries.POST(req('/api/entries','POST',nicknameB)),201)).entry;
+ await result(await entries.POST(req('/api/entries','POST',{...nicknameA,id:crypto.randomUUID(),data:{...nicknameA.data,name:'   '}})),400);
+ await result(await entries.POST(req('/api/entries','POST',{...nicknameA,id:crypto.randomUUID(),data:{...nicknameA.data,since:'2026-02-30'}})),400);
+ const editedNickname=(await result(await entries.PATCH(req('/api/entries','PATCH',{...savedNicknameA,data:{...savedNicknameA.data,origin:'The origin, amended.'}})))).entry;
+ await result(await entries.PATCH(req('/api/entries','PATCH',{...savedNicknameA,data:{...savedNicknameA.data,origin:'Stale overwrite'}})),409);
+ const nicknameList=(await result(await entries.GET(req('/api/entries')))).entries;
+ assert.equal(nicknameList.find(e=>e.id===savedNicknameB.id).data.origin,nicknameB.data.origin);assert.equal(nicknameList.find(e=>e.id===savedNicknameA.id).data.funnyMoment,nicknameA.data.funnyMoment);checks+=2;
  const memory={id:crypto.randomUUID(),kind:'memory',data:{title:'A wish made real',date:'2026-09-10',notes:'Two viewpoints, one lovely day.',photoIds:[saved.id],wishId:item.id,place:'A place we chose',lat:45.4,lng:-75.7}};
  const completion={...memory,completeWish:true,wishRevision:updated.revision};
  let memorySaved=(await result(await entries.POST(req('/api/entries','POST',completion)),201)).entry;
@@ -86,6 +96,7 @@ try{
  const open=(await result(await entries.POST(req('/api/entries','POST',{...capsule,id:crypto.randomUUID(),data:{...capsule.data,stage:'sealed',unlockAt:'2020-01-01T00:00:00.000Z'}})),201)).entry;assert.equal(open.locked,false);assert.equal(open.data.body,capsule.data.body);checks+=2;
  await result(await backup.POST(req('/api/backup','POST',{})),400);
  const full=await result(await backup.POST(req('/api/backup','POST',{confirmFullArchive:true})));assert.equal(full.entries.find(e=>e.id===draft.id).data.body,capsule.data.body);assert(full.assets.some(a=>a.id===original.id));assert(full.assets.some(a=>a.id===attachment.id));checks+=3;
+ assert.equal(full.entries.find(e=>e.id===editedNickname.id).data.origin,'The origin, amended.');assert.equal(full.entries.find(e=>e.id===savedNicknameB.id).data.funnyMoment,nicknameB.data.funnyMoment);checks+=2;
  const exported=await asset.GET(req('/api/assets/'+attachment.id+'?export='+full.exportToken),attachCtx);assert.equal(exported.status,200);assert.deepEqual(new Uint8Array(await exported.arrayBuffer()),png);checks+=2;
  await result(await asset.GET(req('/api/assets/'+attachment.id+'?export='+full.exportToken,'GET',undefined,{'oai-authenticated-user-id':'different-viewer'}),attachCtx),423);
  await DB.prepare('UPDATE export_tickets SET expires_at=? WHERE id=?').bind('2000-01-01',full.exportToken).run();await result(await asset.GET(req('/api/assets/'+attachment.id+'?export='+full.exportToken),attachCtx),423);
@@ -99,9 +110,11 @@ try{
  await result(await photo.DELETE(req('/api/photos/'+saved.id+'?revision='+currentPhoto.revision,'DELETE'),context));
  assert.equal((await result(await assets.GET(req('/api/assets?parentId='+saved.id)))).assets.length,0);checks++;
  await result(await asset.GET(req('/api/assets/'+voice.id),voiceCtx),404);
+ await result(await entries.DELETE(req('/api/entries','DELETE',{id:editedNickname.id,revision:editedNickname.revision})));
+ assert.equal((await result(await entries.GET(req('/api/entries')))).entries.some(e=>e.id===editedNickname.id),false);checks++;
  const latestWish=(await result(await wishes.GET(req('/api/wishes')))).wishes[0];
  await result(await wishes.DELETE(req('/api/wishes','DELETE',{id:latestWish.id,revision:latestWish.revision})));
 
  assert.equal((await result(await wishes.GET(req('/api/wishes')))).wishes.length,0);checks++;
- console.log(`PASS: ${checks} checks covering V3/V4 continuity, V5 wish-to-memory transactions, independent perspectives and collections, future-letter locks, attachment access, full-export authorization, HEIC originals, timeline planning, validation and revision conflicts.`);
+ console.log(`PASS: ${checks} checks covering V3/V4 continuity, V5 wish-to-memory transactions, independent perspectives and collections, future-letter locks, attachment access, full-export authorization, HEIC originals, timeline planning, shared nickname stories, validation and revision conflicts.`);
 }finally{await mf.dispose();await rm(dir,{recursive:true,force:true});delete globalThis.__giftTestEnv;}

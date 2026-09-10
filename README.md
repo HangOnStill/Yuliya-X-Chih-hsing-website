@@ -1,10 +1,12 @@
-# Y❤C — Yuliya Birthday Gift V5
+# Y X C — Yuliya Birthday Gift V5.1
 
 A love letter first, and a home for the memories and wishes that follow.
 
 **[Open the full website](https://yuliya-birthday-gift.bounniecrisis.chatgpt.site)** · [Source repository](https://github.com/HangOnStill/Yuliya-X-Chih-hsing-website)
 
 V5 brings back V3's centered letter, animated heart, clean layout and gentle scroll when opening the envelope, with V4's photo archive, wish organizer and letter settings. The love letter is the default page; other spaces live in a responsive sidebar. The heart uses the original CSS animation, so no GIF download is needed. Reduced-motion preferences are respected.
+
+The header now has a visible hide/show sidebar button and remembers this device's choice. The sidebar order starts with Love letter → Memories → Keepsakes → Wishes → Our nicknames. Ctrl/⌘ + B also toggles the sidebar outside text-entry fields.
 
 ## Included features
 
@@ -13,6 +15,7 @@ V5 brings back V3's centered letter, animated heart, clean layout and gentle scr
 | Love letter 情書 | Answer six questions, unlock matching photographs, choose among four sets of six classical poetry pairings, and adjust display settings. |
 | Memories 記憶庫 | Upload and organize photographs, search captions, associate photos with the questions, and keep dated memory chapters. |
 | Two perspectives | Write Yuliya's and Chih-hsing's feelings separately for a photograph and read both together. |
+| Our nicknames 暱稱小本 | Collect nicknames for each person, their origins, an optional first-use date and funny moments. Search, filter, read, edit and include them in full backups. |
 | Wishes 願望 | Collect and classify ideas, edit dates/budgets/links/notes, keep individual collections, and filter their shared intersection. |
 | Wish → memory 願望變回憶 | Complete a wish with a date, photographs and reflection. Its memory and completed status save together. |
 | Our plan 生活計畫 | Build and edit a twelve-month reunion timeline using chosen wishes, available time and savings/budget estimates. |
@@ -36,7 +39,7 @@ First use downloads the runtime/model from jsDelivr/Hugging Face and may take ti
 - Audio/attachments: up to 24 MiB. Browser recordings stop after two minutes. Microphone access requires permission and HTTPS or localhost. Recording formats depend on the browser.
 - Final-video support is retained, up to 24 MiB. Media endpoints support byte ranges.
 - Annual PDF generation runs in the browser and uses the device's Chinese fonts. Rendered pages are images in a PDF, not searchable text. Large albums need sufficient device memory.
-- Full backup contains original archive media, video, audio, wishes, perspectives, plans, memories, quiz progress, settings and **sealed future letters**. Temporary export authorization is excluded from the ZIP. This is a portable JSON/media export; one-click restore is not implemented. Keep the backup private.
+- Full backup contains original archive media, video, audio, wishes, perspectives, plans, memories, nicknames, quiz progress, settings and **sealed future letters**. Temporary export authorization is excluded from the ZIP. This is a portable JSON/media export; one-click restore is not implemented. Keep the backup private.
 - The source-code bundle is separate: it contains no uploaded website data.
 
 ## Access and hosting
@@ -77,6 +80,6 @@ For the GitHub entrance, select **Settings → Pages → Deploy from a branch �
 
 ## Validation and limits
 
-V5 passed TypeScript checking and 127 isolated integration assertions covering journey continuity, revision conflicts, wish-to-memory transactions, separate perspectives/collections, future-letter locks, attachment access, backup authorization, HEIC original preservation and planning calculations. Production building is part of release preparation. Actual browser microphone capture, HEIC decoding, PDF layout and the first model download were not exercised by those server checks.
+V5.1 passed TypeScript checking and 141 isolated integration assertions covering journey continuity, revision conflicts, wish-to-memory transactions, separate perspectives/collections, future-letter locks, attachment access, backup authorization, HEIC original preservation and planning calculations, nickname stories and their backup inclusion. Production building is part of release preparation. Actual browser microphone capture, HEIC decoding, PDF layout and the first model download were not exercised by those server checks.
 
-See [CHANGELOG.md](CHANGELOG.md) and [future ideas](docs/ROADMAP.md).
+See [CHANGELOG.md](CHANGELOG.md), [GitHub access steps](docs/GITHUB_ACCESS.md), and [future ideas](docs/ROADMAP.md).

@@ -1,5 +1,12 @@
 # Changelog
 
+## 5.1.0 — 2026-09-10
+
+- Changed the browser icon to Y X C with a new icon URL; retained the love-letter heart animation.
+- Added visible sidebar hide/show buttons, device-local preference persistence and focus handling for hidden navigation.
+- Moved Keepsakes immediately after Memories and before Wishes.
+- Added the shared nickname collection: person, name, origin, optional first-use date and funny moments; search, filtering, reading, editing, deletion and complete-backup inclusion.
+
 ## 5.0.0 — 2026-09-10
 
 - Restored the V3 letter, animated heart and opening scroll, with a Y❤C favicon and responsive sidebar.

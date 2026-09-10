@@ -1,8 +1,9 @@
 "use client";
 import {useCallback,useEffect,useRef,useState, type CSSProperties} from 'react';
 import {Heart,Mail,Images,Sparkles,ArrowRight,ArrowLeft,Upload,Check,LockKeyhole,Settings2,RefreshCw,Play,BookOpen,ImagePlus} from 'lucide-react';
-import {SidebarProvider,SidebarTrigger} from '@/components/ui/sidebar';
-import GiftSidebar from './gift-sidebar';
+import {SidebarProvider} from '@/components/ui/sidebar';
+import GiftSidebar,{GiftSidebarToggle} from './gift-sidebar';
+import Nicknames from './nicknames';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Switch} from '@/components/ui/switch';
@@ -25,8 +26,8 @@ import StoryTimeline from './story-timeline';
 import Keepsakes from './keepsakes';
 
 type Question={title:string;text:string;success:string};
-type Preferences={poetry:boolean;envelope:boolean;sets:string[]};
-const defaultPrefs:Preferences={poetry:true,envelope:true,sets:Array(6).fill('original')};
+type Preferences={poetry:boolean;envelope:boolean;sets:string[];sidebarOpen:boolean};
+const defaultPrefs:Preferences={poetry:true,envelope:true,sets:Array(6).fill('original'),sidebarOpen:true};
 const themes=['相遇','靠近','告白','初見','家人','一生'];
 export default function BirthdayGift({questions}:{questions:Question[]}){
  const [tab,setTab]=useState('letter'),[photos,setPhotos]=useState<Photo[]>([]),[photoError,setPhotoError]=useState(''),[photoLoading,setPhotoLoading]=useState(true);
@@ -40,7 +41,7 @@ export default function BirthdayGift({questions}:{questions:Question[]}){
  const poem=(poemSets.find(s=>s.id===prefs.sets[index])||poemSets[0]).poems[index];
  const refreshPhotos=useCallback(async()=>{try{const r=await request('/api/photos');setPhotos(r.photos);setPhotoError('');}catch(e){setPhotoError((e as Error).message);}finally{setPhotoLoading(false);}},[]);
  const refreshJourney=useCallback(async()=>{try{const r=await request('/api/journey');setUnlocked(r.unlocked);setIndex(i=>Math.min(i,r.unlocked,5));setJourneyError('');}catch(e){setJourneyError((e as Error).message);}},[]);
- useEffect(()=>{refreshPhotos();refreshJourney();try{const p=JSON.parse(localStorage.getItem('yc-display-preferences')||'null');if(p&&Array.isArray(p.sets)&&p.sets.length===6&&p.sets.every((s:string)=>poemSets.some(x=>x.id===s)))setPrefs({poetry:p.poetry!==false,envelope:p.envelope!==false,sets:p.sets});}catch{}setReducedMotion(matchMedia('(prefers-reduced-motion: reduce)').matches);setReady(true);const focus=()=>{refreshPhotos();refreshJourney();};window.addEventListener('focus',focus);window.addEventListener('yc-archive-change',focus);return()=>{window.removeEventListener('focus',focus);window.removeEventListener('yc-archive-change',focus);};},[refreshPhotos,refreshJourney]);
+ useEffect(()=>{refreshPhotos();refreshJourney();try{const p=JSON.parse(localStorage.getItem('yc-display-preferences')||'null');if(p&&Array.isArray(p.sets)&&p.sets.length===6&&p.sets.every((s:string)=>poemSets.some(x=>x.id===s)))setPrefs({poetry:p.poetry!==false,envelope:p.envelope!==false,sets:p.sets,sidebarOpen:p.sidebarOpen!==false});}catch{}setReducedMotion(matchMedia('(prefers-reduced-motion: reduce)').matches);setReady(true);const focus=()=>{refreshPhotos();refreshJourney();};window.addEventListener('focus',focus);window.addEventListener('yc-archive-change',focus);return()=>{window.removeEventListener('focus',focus);window.removeEventListener('yc-archive-change',focus);};},[refreshPhotos,refreshJourney]);
  useEffect(()=>{if(ready)try{localStorage.setItem('yc-display-preferences',JSON.stringify(prefs));}catch{}},[prefs,ready]);
  useEffect(()=>{if(!envelope)return;const f=setTimeout(()=>setFlap(true),reducedMotion?0:150);const end=setTimeout(()=>{setEnvelope(false);setOpened(true);setIndex(Math.min(unlocked,5));},reducedMotion?100:2050);return()=>{clearTimeout(f);clearTimeout(end);};},[envelope,reducedMotion,unlocked]);
  useEffect(()=>{setAnswer('');setFeedback('');setCorrect(false);setPoemVisible(false);},[index]);
@@ -51,10 +52,10 @@ export default function BirthdayGift({questions}:{questions:Question[]}){
  async function checkAnswer(e:React.FormEvent){e.preventDefault();if(busy)return;setBusy(true);try{const r=await request('/api/journey',{method:'POST',body:JSON.stringify({index,answer})});setFeedback(r.feedback);setCorrect(r.correct);setUnlocked(r.unlocked);setJourneyError('');if(r.correct&&prefs.poetry)setPoemVisible(true);if(!r.correct)answerRef.current?.select();}catch(e){setFeedback((e as Error).message);setCorrect(false);}finally{setBusy(false);}}
  async function uploadVideo(file?:File){if(!file)return;if(file.type!=='video/mp4'||file.size>24*1024*1024){toast.error('Choose an MP4 up to 24 MB.');return;}setVideoBusy(true);try{await request('/api/photos',{method:'POST',body:file,headers:{'Content-Type':file.type,'X-File-Name':encodeURIComponent(file.name)}});await refreshPhotos();toast.success('Your surprise video is ready.');}catch(e){toast.error((e as Error).message);}finally{setVideoBusy(false);if(videoUpload.current)videoUpload.current.value='';}}
  const solved=index<unlocked;
- return <SidebarProvider className="v5-app" style={{"--sidebar-width":"15rem"} as CSSProperties}><GiftSidebar tab={tab} navigate={navigate} settings={()=>setSettings(true)}/><div className="gift-app">
+ return <SidebarProvider open={prefs.sidebarOpen} onOpenChange={sidebarOpen=>setPrefs(p=>({...p,sidebarOpen}))} className="v5-app" style={{"--sidebar-width":"15rem"} as CSSProperties}><GiftSidebar tab={tab} navigate={navigate} settings={()=>setSettings(true)}/><div className="gift-app">
   <a className="skip-link" href="#main">Skip to content</a>
   <Toaster position="bottom-center" richColors/>
-  <header className="masthead"><div className="nav-start"><SidebarTrigger aria-label="Open or close navigation"/><button className="monogram" onClick={()=>navigate('letter')} aria-label="Back to our love letter">Y<span aria-hidden="true">❤</span>C</button></div><span className="masthead-note">Six memories · one love letter</span><Button variant="outline" onClick={()=>{navigate('letter');openLetter();}}>Open letter</Button></header>
+  <header className="masthead"><div className="nav-start"><GiftSidebarToggle/><button className="monogram" onClick={()=>navigate('letter')} aria-label="Back to our love letter">Y<span aria-hidden="true">X</span>C</button></div><span className="masthead-note">Six memories · one love letter</span><Button variant="outline" onClick={()=>{navigate('letter');openLetter();}}>Open letter</Button></header>
   <main id="main" className="gift-shell">
    <div className="view-stack">
     <section hidden={tab!=='letter'} className="tab-panel letter-tab">
@@ -73,6 +74,7 @@ export default function BirthdayGift({questions}:{questions:Question[]}){
     </section>
     <section hidden={tab!=='memories'} className="tab-panel"><MemoryArchive photos={photos.filter(p=>p.kind==='photo')} loading={photoLoading} error={photoError} refresh={refreshPhotos}/></section>
     <section hidden={tab!=='wishes'} className="tab-panel"><Wishes active={tab==='wishes'} photos={photos} onMemorySaved={()=>{refreshPhotos();navigate('memories');}}/></section>
+    <section hidden={tab!=='nicknames'} className="tab-panel"><Nicknames active={tab==='nicknames'}/></section>
     <section hidden={tab!=='plan'} className="tab-panel"><LifePlan active={tab==='plan'}/></section>
     <section hidden={tab!=='capsules'} className="tab-panel"><FutureLetters active={tab==='capsules'}/></section>
     <section hidden={tab!=='timeline'} className="tab-panel"><StoryTimeline active={tab==='timeline'} photos={photos} refreshPhotos={refreshPhotos}/></section>
