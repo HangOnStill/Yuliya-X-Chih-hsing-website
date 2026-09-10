@@ -17,8 +17,8 @@ export const originalQuestions = [
     },
     {
       title: '3. A Sudden Surprise',
-      text: "Yuliya's first real confession of love towards Chih-hsing is through a question, which is about ___(dating/sex/marriage/common Interest)",
-      answer: 'marriage',
+      text: "Yuliya's first real confession of love towards Chih-hsing is very direct, and that was inspired by a person Y&C both admire, who is __",
+      answer: '陳丹青',
       empty: 'Woooo... It seems that the message is eaten by the vacuum',
       success: 'Chih-hsing was prepared to be a lifetime bachelor and never thought about getting married with anybody until meeting you （づ￣3￣）づ╭❤～',
       wrong: 'Dumb! Yuliya has become ever sillier since falling in love with Chih-hsing~'
