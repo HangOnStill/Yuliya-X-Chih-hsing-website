@@ -44,3 +44,13 @@ next-env.d.ts
 /.codex/
 /outputs/
 /work/
+
+# Generated checks, bundles, local data and credentials
+*.tsbuildinfo
+/bundles/
+*.zip
+*.tar.gz
+*.sqlite*
+*.db
+.dev.vars*
+*.key
