@@ -4,7 +4,7 @@ import "./globals.css";
 export const viewport: Viewport = {width:"device-width",initialScale:1,viewportFit:"cover",themeColor:"#fff8fb"};
 
 export const metadata: Metadata = {
-  title: "Y ♥ C — Birthday Love Letter · V5.2",
+  title: "Y ♥ C",
   description: "A birthday love letter, a memory archive, and a shared wishlist for Yuliya and Chih-hsing.",
   icons: {
     icon: "/favicon-yheartc.svg",
