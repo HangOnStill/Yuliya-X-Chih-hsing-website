@@ -1,3 +1,11 @@
+## V5.2 — public viewing and V3 background
+
+- Start with the sidebar hidden on every visit.
+- Restore the original V3 floating-heart background on the Love Letter page.
+- Allow public reading and a temporary guest quiz while restricting writes and full backups to configured editors.
+- Hide draft letters and attachments from guests and preserve sealed-letter date locks.
+- Explain how to switch the existing Site to a two-person allowlist.
+
 ## V5.1 — heart monogram refinement
 
 - Match the navigation brand and browser favicon to the preferred burgundy Y / rose heart / C design.

@@ -11,7 +11,7 @@ export const GET=api(async(req,ctx)=>{
  }
  const o=await bucket().get(p.object_key,range?{range}:undefined);
  if(!o)return json({error:'Photo not found.'},404);
- const h=new Headers({'Content-Type':p.mime,'Cache-Control':'private, max-age=3600','X-Content-Type-Options':'nosniff','Accept-Ranges':'bytes','ETag':o.httpEtag});
+ const h=new Headers({'Content-Type':p.mime,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Accept-Ranges':'bytes','ETag':o.httpEtag});
  if(range){h.set('Content-Range',`bytes ${range.offset}-${range.offset+range.length-1}/${o.size}`);h.set('Content-Length',String(range.length));}else h.set('Content-Length',String(o.size));
  return new Response(o.body,{status:range?206:200,headers:h});
 });

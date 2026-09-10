@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Y ♥ C — Birthday Love Letter · V5.1",
+  title: "Y ♥ C — Birthday Love Letter · V5.2",
   description: "A birthday love letter, a memory archive, and a shared wishlist for Yuliya and Chih-hsing.",
   icons: {
     icon: "/favicon-yheartc.svg",

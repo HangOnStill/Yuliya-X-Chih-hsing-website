@@ -1,4 +1,4 @@
-# Y ♥ C — Yuliya Birthday Gift V5.1
+# Y ♥ C — Yuliya Birthday Gift V5.2
 
 A love letter first, and a home for the memories and wishes that follow.
 
@@ -6,7 +6,7 @@ A love letter first, and a home for the memories and wishes that follow.
 
 V5 brings back V3's centered letter, animated heart, clean layout and gentle scroll when opening the envelope, with V4's photo archive, wish organizer and letter settings. The love letter is the default page; other spaces live in a responsive sidebar. The heart uses the original CSS animation, so no GIF download is needed. Reduced-motion preferences are respected.
 
-The header now has a visible hide/show sidebar button and remembers this device's choice. The sidebar order starts with Love letter → Memories → Keepsakes → Wishes → Our nicknames. Ctrl/⌘ + B also toggles the sidebar outside text-entry fields.
+The header has a visible hide/show sidebar button. The sidebar starts hidden on every visit. V3's fourteen softly floating background hearts return on the Love Letter page. The sidebar order starts with Love letter → Memories → Keepsakes → Wishes → Our nicknames. Ctrl/⌘ + B also toggles the sidebar outside text-entry fields.
 
 ## Included features
 
@@ -46,7 +46,7 @@ First use downloads the runtime/model from jsDelivr/Hugging Face and may take ti
 
 The full app uses React, Vinext, a server worker, D1 for records and R2 for media. GitHub Pages serves only the small entrance in `docs/`, linking/redirecting to the full website. It cannot run the API, database or future-letter access checks.
 
-The existing website retains its private access settings. A public source repository does not publish stored photos or recordings. To use it together, the owner must grant the intended partner access through the site's sharing controls. The Yuliya/Chih-hsing selectors attribute contributions; they are not separate authenticated identities or private account boundaries. Authorized viewers share the archive and can edit its records.
+The website supports anyone-with-the-link viewing. Hosted PUBLIC_READ=true enables anonymous reads; EDITOR_EMAILS is a comma-separated server-side allowlist for editing and full backups. The owner signs in with ChatGPT to edit. Other visitors can browse and try the six questions; guest quiz progress lasts for the current page visit. Draft future letters are excluded from public results, while sealed letters keep their date lock. A public source repository contains code, not uploaded archive media. When public viewing is enabled, the website itself serves saved published photos and records to visitors. The Yuliya/Chih-hsing selectors attribute contributions; they are not separate authenticated identities or private account boundaries. Only users on the editor allowlist can change records. Sites sharing controls independently govern who can open the website.
 
 A sealed letter has an application-level date lock, not encryption. Authorized full-backup export deliberately includes sealed content after an explicit confirmation. Unlocking uses the server clock; the editor converts local time to UTC. Sealed letters cannot be rewritten; create a new draft to replace one.
 
@@ -80,6 +80,15 @@ For the GitHub entrance, select **Settings → Pages → Deploy from a branch �
 
 ## Validation and limits
 
-V5.1 passed TypeScript checking and 141 isolated integration assertions covering journey continuity, revision conflicts, wish-to-memory transactions, separate perspectives/collections, future-letter locks, attachment access, backup authorization, HEIC original preservation and planning calculations, nickname stories and their backup inclusion. Production building is part of release preparation. Actual browser microphone capture, HEIC decoding, PDF layout and the first model download were not exercised by those server checks.
+V5.2 passes 165 isolated integration checks, including public-view authorization checks, and TypeScript checking. Tests cover journey continuity, revision conflicts, wish-to-memory transactions, separate perspectives/collections, future-letter locks, attachment access, backup authorization, HEIC original preservation and planning calculations, nickname stories and their backup inclusion. Production building is part of release preparation. Actual browser microphone capture, HEIC decoding, PDF layout and the first model download were not exercised by those server checks.
 
 See [CHANGELOG.md](CHANGELOG.md), [GitHub access steps](docs/GITHUB_ACCESS.md), and [future ideas](docs/ROADMAP.md).
+
+## Restrict to two people later
+
+1. In Sites sharing, change Anyone with the link (public) to custom access. Keep the owner and add only the intended partner by their exact sign-in email. Remove other people and group grants. The current project supports external viewers.
+2. Add the partner to the hosted EDITOR_EMAILS value if they should also edit, then deploy to apply runtime changes. Granting Site viewing access alone does not grant app editing access.
+3. Keep PUBLIC_READ=true behind the private Site access gate if the partner only needs viewing. The platform rejects uninvited visitors before serving pages, APIs or media. Do not implement a client-side password or a secret URL as the access boundary.
+4. Consider making the GitHub repository private separately if you also want to hide the source, question answers and written sample content. This does not itself change website access. Previously downloaded public content cannot be recalled.
+
+The default local build is private: PUBLIC_READ is unset. Configure EDITOR_EMAILS before enabling public reading. Identity headers must come from the trusted Sites dispatcher, never directly from internet clients on another host.

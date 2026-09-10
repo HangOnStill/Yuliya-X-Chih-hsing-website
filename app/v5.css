@@ -15,3 +15,9 @@
 @media(max-width:1100px){.masthead-note{display:none}}
 @media(max-width:767px){.nav-start{gap:8px}.masthead{gap:8px}.gift-sidebar-toggle[data-slot=button]{padding-inline:10px}.nickname-grid{grid-template-columns:1fr;gap:16px}.nickname-toolbar{align-items:stretch;gap:14px}.nickname-search{max-width:none}.nickname-toolbar .filter-row{width:100%}.nickname-toolbar .filter-row>button{font-size:.8125rem;padding-inline:10px}.nickname-card h3{font-size:1.7rem}.nickname-edit-dialog[data-slot=dialog-content],.nickname-read-dialog[data-slot=dialog-content]{padding:24px 18px}.nickname-form .form-pair{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){[data-slot=sidebar-container],[data-slot=sidebar-gap]{transition:none!important}}
+
+/* V3's original floating heart background, scoped to the love letter. */
+.gift-app{position:relative;isolation:isolate}.gift-shell,.gift-footer{position:relative;z-index:1}.ambient-hearts{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}.ambient-heart{position:absolute;bottom:-40px;color:rgba(201,95,131,.12);font-size:var(--size);animation:floatHeart var(--duration) linear infinite;animation-delay:var(--delay)}
+@keyframes floatHeart{from{transform:translateY(0) rotate(0);opacity:0}10%{opacity:.7}to{transform:translateY(-115vh) rotate(30deg);opacity:0}}
+.guest-note{position:relative;z-index:1;display:flex;justify-content:center;flex-wrap:wrap;gap:8px 18px;padding:9px 20px;font-size:.78rem;color:#896d79;text-align:center}.guest-note a{text-decoration:underline;color:#6f2844}
+@media(prefers-reduced-motion:reduce){.ambient-hearts{display:none}}

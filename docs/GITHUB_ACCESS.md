@@ -16,6 +16,8 @@ Installed GitHub Apps 的權限由應用要求；使用者通常只能檢視、�
 
 如果該連線僅提供讀取權限，必須改用支援寫入的官方連線流程。顯示 Connected 不代表已有儲存庫安裝授權。ChatGPT 的 Allow low-risk actions 是動作審核設定，不會提升 GitHub 權限。[OpenAI 外掛說明](https://learn.chatgpt.com/docs/plugins)
 
-## 已確認的狀態（2026-09-10）
+## 連線已修復（2026-09-10）
 
-GitHub 外掛顯示連線；可讀取公開儲存庫，但此連線回報 installations 為空。此前寫入回傳 403 Resource not accessible by integration，尚未成功上傳網站程式碼。需要完成有效的儲存庫授權後再驗證寫入。
+已確認 HangOnStill 的 ChatGPT Codex Connector 安裝，並成功寫入 README。網站原始碼使用 GitHub API 提交，無須新增 GPTCodex.yml 或安裝 Marketplace Actions。
+
+公開網址與兩人存取限制，請參閱 README 的 Access and hosting 及 Restrict to two people later。
