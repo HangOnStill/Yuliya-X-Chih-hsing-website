@@ -4,3 +4,6 @@ import {api,db,bucket,json,HttpError} from '@/lib/server';
 import {assetParent,serveStoredMedia,validExportTicket} from '@/lib/v5-server';
 export const GET=api(async(req,ctx)=>{const {id}=await ctx.params;const a=await db().prepare('SELECT parent_type,parent_id,object_key,mime,size FROM assets WHERE id=?').bind(id).first<any>();if(!a)throw new HttpError(404,'Attachment not found.');if(!canEdit(req)&&a.parent_type==='capsule'){const parent=await entryById(a.parent_id);if(parent?.kind==='capsule'&&parent.data.stage==='draft')throw new HttpError(404,'Attachment not found.');}if(!await validExportTicket(req))await assetParent(a.parent_type,a.parent_id);return serveStoredMedia(req,a);});
 export const DELETE=api(async(req,ctx)=>{const {id}=await ctx.params;const a=await db().prepare('SELECT parent_type,parent_id,object_key FROM assets WHERE id=?').bind(id).first<any>();if(!a)throw new HttpError(404,'Attachment not found.');await assetParent(a.parent_type,a.parent_id,true);await db().prepare('DELETE FROM assets WHERE id=?').bind(id).run();await bucket().delete(a.object_key);return json({ok:true});});
+
+// Explicit HEAD keeps the same membership/lock/range checks as GET.
+export async function HEAD(req:Request,ctx:any){const r=await GET(req,ctx);await r.body?.cancel();return new Response(null,{status:r.status,headers:r.headers});}

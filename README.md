@@ -15,6 +15,7 @@ The header has a visible hide/show sidebar button. The sidebar starts hidden on 
 | Love letter 情書 | Answer six questions, unlock matching photographs, choose among four sets of six classical poetry pairings, and adjust display settings. |
 | Memories 記憶庫 | Upload and organize photographs, search captions, associate photos with the questions, and keep dated memory chapters. |
 | Two perspectives | Write Yuliya's and Chih-hsing's feelings separately for a photograph and read both together. |
+| Our poetry 詩詞庫 | Collect poems, two comments and private custom poetry for each Love Letter page. |
 | Our nicknames 暱稱小本 | Collect nicknames for each person, their origins, an optional first-use date and funny moments. Search, filter, read, edit and include them in full backups. |
 | Wishes 願望 | Collect and classify ideas, edit dates/budgets/links/notes, keep individual collections, and filter their shared intersection. |
 | Wish → memory 願望變回憶 | Complete a wish with a date, photographs and reflection. Its memory and completed status save together. |
@@ -46,7 +47,11 @@ First use downloads the runtime/model from jsDelivr/Hugging Face and may take ti
 
 The full app uses React, Vinext, a server worker, D1 for records and R2 for media. GitHub Pages serves only the small entrance in `docs/`, linking/redirecting to the full website. It cannot run the API, database or future-letter access checks.
 
-The website supports anyone-with-the-link viewing. Hosted PUBLIC_READ=true enables anonymous reads; EDITOR_EMAILS is a comma-separated server-side allowlist for editing and full backups. The owner signs in with ChatGPT to edit. Other visitors can browse and try the six questions; guest quiz progress lasts for the current page visit. Draft future letters are excluded from public results, while sealed letters keep their date lock. A public source repository contains code, not uploaded archive media. When public viewing is enabled, the website itself serves saved published photos and records to visitors. The Yuliya/Chih-hsing selectors attribute contributions; they are not separate authenticated identities or private account boundaries. Only users on the editor allowlist can change records. Sites sharing controls independently govern who can open the website.
+Phase 1 implements a public UI shell with an allowlisted private archive. Every private API read/write, media GET/HEAD and full export requires a trusted Sites user ID **and** normalized authenticated email matching server-side `EDITOR_EMAILS`. Authentication alone is insufficient. Missing, empty, whitespace-only or partly malformed allowlists deny all archive access. `PUBLIC_READ` remains compatible configuration but no longer authorizes archive access, regardless of its value.
+
+The intended production configuration is exactly `EDITOR_EMAILS=bounniecrisis@gmail.com,changyue960915@gmail.com`, configured only on the server. This is a Phase 2 configuration requirement, not an executed production change. Both members have intended read/write permissions. Anonymous visitors receive 401; authenticated outsiders receive 403. The narrowly public `/api/journey` POST checks static quiz answers and stores no guest progress; Journey GET remains private. The client does not mount private collections for guests and discards private in-memory component state on a protected 401/403.
+
+GitHub/source access, Site editing/publishing, Site viewing and application-data membership are separate permissions. Neither member needs GitHub or publishing rights to edit application data. Person selectors label contributions, not authenticated identities. Sites viewing rules can additionally limit who opens the shell. The dispatcher must strip/replace visitor identity headers and prevent direct-origin bypass; external-user identity forwarding and production caching require Phase 2 live verification.
 
 A sealed letter has an application-level date lock, not encryption. Authorized full-backup export deliberately includes sealed content after an explicit confirmation. Unlocking uses the server clock; the editor converts local time to UTC. Sealed letters cannot be rewritten; create a new draft to replace one.
 
@@ -80,15 +85,18 @@ For the GitHub entrance, select **Settings → Pages → Deploy from a branch �
 
 ## Validation and limits
 
-V5.2 passes 165 isolated integration checks, including public-view authorization checks, and TypeScript checking. Tests cover journey continuity, revision conflicts, wish-to-memory transactions, separate perspectives/collections, future-letter locks, attachment access, backup authorization, HEIC original preservation and planning calculations, nickname stories and their backup inclusion. Production building is part of release preparation. Actual browser microphone capture, HEIC decoding, PDF layout and the first model download were not exercised by those server checks.
+Phase 1 passes 1,391 isolated checks (165 continuity checks, 1,217 privacy/poetry regression checks and 9 client SSR/denial-signal checks). Tests use ephemeral Miniflare D1/R2 and synthetic media. Both configured identities are simulated at the trusted boundary; this does not verify production identity forwarding. Actual browser account switching, microphone capture, HEIC decoding, PDF layout and first model download remain manual checks.
 
 See [CHANGELOG.md](CHANGELOG.md), [GitHub access steps](docs/GITHUB_ACCESS.md), and [future ideas](docs/ROADMAP.md).
 
-## Restrict to two people later
+## Phase 2 configuration and live verification
 
-1. In Sites sharing, change Anyone with the link (public) to custom access. Keep the owner and add only the intended partner by their exact sign-in email. Remove other people and group grants. The current project supports external viewers.
-2. Add the partner to the hosted EDITOR_EMAILS value if they should also edit, then deploy to apply runtime changes. Granting Site viewing access alone does not grant app editing access.
-3. Keep PUBLIC_READ=true behind the private Site access gate if the partner only needs viewing. The platform rejects uninvited visitors before serving pages, APIs or media. Do not implement a client-side password or a secret URL as the access boundary.
-4. Consider making the GitHub repository private separately if you also want to hide the source, question answers and written sample content. This does not itself change website access. Previously downloaded public content cannot be recalled.
+Do not deploy this Phase 1 branch automatically. After explicit Phase 2 approval, configure the exact server-side membership list above and verify anonymous, outsider and both member accounts against collections and known media URLs. Verify the dispatcher's trusted identity boundary before declaring production protected. Changing GitHub visibility does not change runtime privacy. Previously downloaded public content cannot be recalled.
 
-The default local build is private: PUBLIC_READ is unset. Configure EDITOR_EMAILS before enabling public reading. Identity headers must come from the trusted Sites dispatcher, never directly from internet clients on another host.
+Optionally restrict the Site audience separately after approval. External invitation, forwarded email and stable user ID remain **REQUIRES PHASE 2 LIVE VERIFICATION**. Do not weaken archive membership to accommodate missing identity information.
+
+## Our poetry · 詩詞庫
+
+Members can collect a title, optional author, poem and separate Yuliya/Chih-hsing comments; both members may edit either comment. Search covers poem text and comments. In Love Letter settings, select one of six pages and either copy a saved poem or enter a new poem directly. Each saved page keeps an independent snapshot; editing/deleting the library entry does not change that page. Restore the original poetry selection with its reset button. New direct text can separately be added to the library.
+
+Library poems, comments and custom letter poems use protected entry records and are included in the existing full archive export. They are not embedded into public initial HTML or browser preferences. Original static poetry remains public. No database migration or backup-format change is needed.

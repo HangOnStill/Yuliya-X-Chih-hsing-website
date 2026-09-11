@@ -1,4 +1,5 @@
 "use client";
+import {notifyArchiveDenied} from './archive-client';
 import {Photo,Wish} from './models';
 import {Entry,Asset} from './v5-models';
 import {poemSets} from './poems';
@@ -6,7 +7,7 @@ import {request} from './wish-drafts';
 import {downloadBlob} from './v5-client';
 export function photoYear(p:Photo,entries:Entry[]){const linked=entries.filter(e=>e.kind==='memory'&&e.data.photoIds.includes(p.id)).map(e=>e.kind==='memory'?e.data.date:'').sort()[0];return (p.takenAt||linked||p.createdAt).slice(0,4);}
 export function wishDate(w:Wish,entries:Entry[]){const date=entries.filter(e=>e.kind==='memory'&&e.data.wishId===w.id).map(e=>e.kind==='memory'?e.data.date:'').sort().at(-1);return date||w.updatedAt.slice(0,10);}
-async function media(url:string,signal?:AbortSignal){const r=await fetch(url,{credentials:'same-origin',signal});if(!r.ok)throw new Error('A media file could not be downloaded. The export was stopped so it does not silently omit anything.');return r;}
+async function media(url:string,signal?:AbortSignal){const r=await fetch(url,{credentials:'same-origin',signal});notifyArchiveDenied(r.status);if(!r.ok)throw new Error('A media file could not be downloaded. The export was stopped so it does not silently omit anything.');return r;}
 function dataUrl(blob:Blob){return new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result as string);reader.onerror=()=>reject(new Error('Could not read a photograph for the PDF.'));reader.readAsDataURL(blob);});}
 export async function exportYearbook({year,photos,wishes,entries,setId,progress,signal}:{year:string;photos:Photo[];wishes:Wish[];entries:Entry[];setId:string;progress:(s:string)=>void;signal:AbortSignal}){
  const [{jsPDF},{toJpeg}]=await Promise.all([import('jspdf'),import('html-to-image')]);const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});pdf.setProperties({title:`Yuliya & Chih-hsing — ${year}`,author:'Yuliya & Chih-hsing',subject:'Our photographs, poetry, and wishes made real'});const poems=(poemSets.find(s=>s.id===setId)||poemSets[0]).poems;const root=document.createElement('div');root.style.cssText='position:fixed;left:-12000px;top:0;width:794px;pointer-events:none;z-index:-10;';document.body.appendChild(root);const pages:HTMLDivElement[]=[];let current!:HTMLDivElement;

@@ -6,7 +6,7 @@ export const GET=api(async(req,ctx)=>{
  const header=req.headers.get('range');let range:{offset:number;length:number}|undefined;
  if(header){const m=/^bytes=(\d*)-(\d*)$/.exec(header);let start=NaN,end=NaN;
   if(m&&(m[1]||m[2])){if(m[1]){start=Number(m[1]);end=m[2]?Math.min(Number(m[2]),p.size-1):p.size-1;}else{start=Math.max(0,p.size-Number(m[2]));end=p.size-1;}}
-  if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start<0||start>=p.size||end<start)return new Response(null,{status:416,headers:{'Content-Range':`bytes */${p.size}`}});
+  if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start<0||start>=p.size||end<start)return new Response(null,{status:416,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Content-Range':`bytes */${p.size}`}});
   range={offset:start,length:end-start+1};
  }
  const o=await bucket().get(p.object_key,range?{range}:undefined);
@@ -15,3 +15,6 @@ export const GET=api(async(req,ctx)=>{
  if(range){h.set('Content-Range',`bytes ${range.offset}-${range.offset+range.length-1}/${o.size}`);h.set('Content-Length',String(range.length));}else h.set('Content-Length',String(o.size));
  return new Response(o.body,{status:range?206:200,headers:h});
 });
+
+// Explicit HEAD keeps the same membership/lock/range checks as GET.
+export async function HEAD(req:Request,ctx:any){const r=await GET(req,ctx);await r.body?.cancel();return new Response(null,{status:r.status,headers:r.headers});}

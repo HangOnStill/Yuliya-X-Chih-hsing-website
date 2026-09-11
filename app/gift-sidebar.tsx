@@ -8,6 +8,7 @@ const items=[
  ['memories','Memories','記憶庫',Images],
  ['keepsakes','Keepsakes','紀念冊與備份',BookHeart],
  ['wishes','Wishes','願望',Sparkles],
+ ['poetry','Our poetry','詩詞庫',BookHeart],
  ['nicknames','Our nicknames','暱稱小本',Smile],
  ['plan','Our next year','生活計畫',CalendarHeart],
  ['capsules','Future letters','給未來的信',LockKeyhole],

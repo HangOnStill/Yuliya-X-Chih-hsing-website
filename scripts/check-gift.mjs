@@ -9,10 +9,10 @@ const dir=await mkdtemp(join(tmpdir(),'yc-check-'));
 const mf=new Miniflare({modules:true,script:'export default {fetch(){return new Response("test")}}',compatibilityDate:'2026-05-15',d1Databases:['DB'],r2Buckets:['BUCKET'],cf:false});
 let checks=0;
 async function module(path,name){const out=join(dir,name+'.mjs');await build({entryPoints:[path],outfile:out,bundle:true,platform:'node',format:'esm',logLevel:'silent',plugins:[{name:'isolated-test-bindings',setup(b){b.onResolve({filter:/^cloudflare:workers$/},()=>({path:'cloudflare:workers',namespace:'test'}));b.onLoad({filter:/.*/,namespace:'test'},()=>({contents:'export const env=globalThis.__giftTestEnv;',loader:'js'}));}}]});return import(pathToFileURL(out));}
-function req(path,method='GET',data,extra={}){return new Request('https://gift.test'+path,{method,headers:{'oai-authenticated-user-id':'test-viewer','oai-authenticated-user-email':'owner@example.test','content-type':'application/json',...extra},...(data!==undefined?{body:typeof data==='string'||data instanceof Uint8Array?data:JSON.stringify(data)}:{})});}
+function req(path,method='GET',data,extra={}){return new Request('https://gift.test'+path,{method,headers:{'oai-authenticated-user-id':'test-viewer','oai-authenticated-user-email':'bounniecrisis@gmail.com','content-type':'application/json',...extra},...(data!==undefined?{body:typeof data==='string'||data instanceof Uint8Array?data:JSON.stringify(data)}:{})});}
 async function result(r,expected=200){assert.equal(r.status,expected,await r.clone().text());checks++;return r.json();}
 try{
- const DB=await mf.getD1Database('DB'),BUCKET=await mf.getR2Bucket('BUCKET');globalThis.__giftTestEnv={DB,BUCKET};
+ const DB=await mf.getD1Database('DB'),BUCKET=await mf.getR2Bucket('BUCKET');globalThis.__giftTestEnv={DB,BUCKET,EDITOR_EMAILS:'bounniecrisis@gmail.com,changyue960915@gmail.com'};
  for(const f of (await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort())for(const sql of (await readFile('drizzle/'+f,'utf8')).split('--> statement-breakpoint').filter(s=>s.trim()))await DB.prepare(sql).run();
  const photos=await module('app/api/photos/route.ts','photos'),photo=await module('app/api/photos/[id]/route.ts','photo'),media=await module('app/api/media/[id]/route.ts','media'),wishes=await module('app/api/wishes/route.ts','wishes'),journey=await module('app/api/journey/route.ts','journey'),drafts=await module('lib/wish-drafts.ts','drafts');
  await result(await photos.GET(new Request('https://gift.test/api/photos')),401);
@@ -105,14 +105,15 @@ try{
  await result(await entries.POST(req('/api/entries','POST',{id:crypto.randomUUID(),kind:'plan',data:plan})),201);
  await result(await entries.POST(req('/api/entries','POST',{id:crypto.randomUUID(),kind:'plan',data:{...plan,targetDate:'2025-01-01'}})),400);
 
- // Public view must not grant archive mutations, draft access or full export.
+ // Phase 1 replaces insecure public-archive expectations with explicit denial.
+ // PUBLIC_READ is ignored for private reads; only quiz POST remains public.
  globalThis.__giftTestEnv.PUBLIC_READ='true';
- globalThis.__giftTestEnv.EDITOR_EMAILS='owner@example.test';
+ globalThis.__giftTestEnv.EDITOR_EMAILS='bounniecrisis@gmail.com,changyue960915@gmail.com';
  const anonymous=(path,method='GET',data)=>new Request('https://gift.test'+path,{method,headers:{'content-type':'application/json'},...(data?{body:JSON.stringify(data)}:{})});
- await result(await photos.GET(anonymous('/api/photos')));
- await result(await wishes.GET(anonymous('/api/wishes')));
- const guestJourney=await result(await journey.GET(anonymous('/api/journey')));assert.equal(guestJourney.temporary,true);checks++;
- const guestAnswer=await result(await journey.POST(anonymous('/api/journey','POST',{index:0,answer:'Vistopia'})));assert.equal(guestAnswer.correct,true);checks++;
+ await result(await photos.GET(anonymous('/api/photos')),401);
+ await result(await wishes.GET(anonymous('/api/wishes')),401);
+ await result(await journey.GET(anonymous('/api/journey')),401);
+ const guestAnswer=await result(await journey.POST(anonymous('/api/journey','POST',{index:0,answer:'Vistopia'})));assert.equal(guestAnswer.correct,true);assert.equal(guestAnswer.temporary,true);checks+=2;
  assert.equal((await result(await journey.GET(req('/api/journey')))).unlocked,6);checks++;
  await result(await photos.POST(anonymous('/api/photos','POST',{})),401);
  await result(await entries.POST(req('/api/entries','POST',nicknameA,{'oai-authenticated-user-email':'stranger@example.test'})),403);
@@ -121,15 +122,18 @@ try{
  await result(await backup.POST(req('/api/backup','POST',{confirmFullArchive:true},{'oai-authenticated-user-email':'stranger@example.test'})),403);
  const privateDraft=(await result(await entries.POST(req('/api/entries','POST',{...capsule,id:crypto.randomUUID(),data:{...capsule.data,title:'An unfinished draft'}})),201)).entry;
  const privateAsset=(await result(await assets.POST(req('/api/assets','POST',png,{'content-type':'image/png','x-parent-type':'capsule','x-parent-id':privateDraft.id,'x-asset-purpose':'attachment'})),201)).asset;
- const publicEntries=(await result(await entries.GET(anonymous('/api/entries')))).entries;
- assert(!publicEntries.some(e=>e.id===privateDraft.id));assert.equal(publicEntries.find(e=>e.id===sealed.id).data.body,'');checks+=2;
- assert.equal((await result(await assets.GET(anonymous('/api/assets?parentId='+privateDraft.id)))).assets.length,0);checks++;
- await result(await asset.GET(anonymous('/api/assets/'+privateAsset.id),{params:Promise.resolve({id:privateAsset.id})}),404);
- await result(await asset.GET(anonymous('/api/assets/'+attachment.id+'?export='+full.exportToken),attachCtx),423);
- assert.equal((await media.GET(anonymous('/api/media/'+saved.id),context)).status,200);checks++;
+ await result(await entries.GET(anonymous('/api/entries')),401);
+ const memberEntries=(await result(await entries.GET(req('/api/entries')))).entries;
+ assert(memberEntries.some(e=>e.id===privateDraft.id));assert.equal(memberEntries.find(e=>e.id===sealed.id).data.body,'');checks+=2;
+ await result(await assets.GET(anonymous('/api/assets?parentId='+privateDraft.id)),401);
+ await result(await asset.GET(anonymous('/api/assets/'+privateAsset.id),{params:Promise.resolve({id:privateAsset.id})}),401);
+ await result(await asset.GET(anonymous('/api/assets/'+attachment.id+'?export='+full.exportToken),attachCtx),401);
+ await result(await media.GET(anonymous('/api/media/'+saved.id),context),401);
  globalThis.__giftTestEnv.PUBLIC_READ='false';
  await result(await photos.GET(anonymous('/api/photos')),401);
- delete globalThis.__giftTestEnv.PUBLIC_READ;delete globalThis.__giftTestEnv.EDITOR_EMAILS;
+ delete globalThis.__giftTestEnv.PUBLIC_READ;
+ const {checkPrivacy}=await import('./check-privacy.mjs');
+ checks+=await checkPrivacy({DB,BUCKET,photos,photo,media,wishes,entries,assets,asset,journey,backup,photoId:saved.id,voiceId:voice.id,originalId:original.id,lockedAssetId:attachment.id,lockedId:sealed.id,openId:open.id,draftId:privateDraft.id,draftAssetId:privateAsset.id,png,audioBytes});
  await result(await entries.DELETE(req('/api/entries','DELETE',{id:sealed.id,revision:sealed.revision})));
  await result(await asset.GET(req('/api/assets/'+attachment.id),attachCtx),404);
  const currentPhoto=(await result(await photos.GET(req('/api/photos')))).photos.find(p=>p.id===saved.id);
@@ -142,5 +146,7 @@ try{
  await result(await wishes.DELETE(req('/api/wishes','DELETE',{id:latestWish.id,revision:latestWish.revision})));
 
  assert.equal((await result(await wishes.GET(req('/api/wishes')))).wishes.length,0);checks++;
+ const {checkClientPrivacy}=await import('./check-client-privacy.mjs');
+ checks+=await checkClientPrivacy();
  console.log(`PASS: ${checks} checks covering V3/V4 continuity, V5 wish-to-memory transactions, independent perspectives and collections, future-letter locks, attachment access, full-export authorization, HEIC originals, timeline planning, shared nickname stories, validation and revision conflicts.`);
 }finally{await mf.dispose();await rm(dir,{recursive:true,force:true});delete globalThis.__giftTestEnv;}
