@@ -100,3 +100,8 @@ Optionally restrict the Site audience separately after approval. External invita
 Members can collect a title, optional author, poem and separate Yuliya/Chih-hsing comments; both members may edit either comment. Search covers poem text and comments. In Love Letter settings, select one of six pages and either copy a saved poem or enter a new poem directly. Each saved page keeps an independent snapshot; editing/deleting the library entry does not change that page. Restore the original poetry selection with its reset button. New direct text can separately be added to the library.
 
 Library poems, comments and custom letter poems use protected entry records and are included in the existing full archive export. They are not embedded into public initial HTML or browser preferences. Original static poetry remains public. No database migration or backup-format change is needed.
+
+## Source preservation and releases
+Every future production Site version must have its exact editable source committed and pushed to this GitHub repository. Develop from the verified production baseline, run isolated checks, commit, push the exact candidate, then deploy that SHA to Sites. Only after successful live release verification advance GitHub main to that exact deployed SHA and tag the release. Failed or incomplete verification leaves main unchanged. Never deploy a Sites-only source revision.
+
+Memory titles use private `letter-title` entries with one page (0–5) per record. Authorized members edit subtitle (up to 80 characters; blank hides subtitle) and main title (1–160 characters) in Letter settings. Reset deletes the override. Defaults stay public and immutable. Existing membership, revision checks and full backup apply; no SQL migration is needed.

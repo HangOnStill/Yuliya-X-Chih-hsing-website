@@ -6,7 +6,7 @@ export const assetSelect='SELECT id,parent_type AS parentType,parent_id AS paren
 export function decodeEntry(row:any,redact=true):Entry{const entry={...row,data:typeof row.data==='string'?JSON.parse(row.data):row.data} as Entry;if(entry.kind==='capsule'){entry.locked=entry.data.stage==='sealed'&&new Date(entry.data.unlockAt).getTime()>Date.now();if(redact&&entry.locked)entry.data={...entry.data,body:''};}return entry;}
 export async function entryById(id:string,redact=true){const r=await db().prepare(entrySelect+' WHERE id=?').bind(id).first();return r?decodeEntry(r,redact):null;}
 export async function allEntries(redact=true){return(await db().prepare(entrySelect+' ORDER BY created_at DESC').all()).results.map(r=>decodeEntry(r,redact));}
-export function entryKey(v:EntryInput){return v.kind==='perspective'?`perspective:${v.data.photoId}:${v.data.person}`:v.kind==='interest'?`interest:${v.data.wishId}:${v.data.person}`:v.kind==='letter-poem'?`letter-poem:${v.data.slot}`:null;}
+export function entryKey(v:EntryInput){return v.kind==='letter-title'?`letter-title:${v.data.page}`:v.kind==='perspective'?`perspective:${v.data.photoId}:${v.data.person}`:v.kind==='interest'?`interest:${v.data.wishId}:${v.data.person}`:v.kind==='letter-poem'?`letter-poem:${v.data.slot}`:null;}
 export async function validateReferences(v:EntryInput){
  const photoIds=v.kind==='memory'?v.data.photoIds:v.kind==='perspective'?[v.data.photoId]:[];
  for(const id of photoIds)if(!await db().prepare("SELECT id FROM photos WHERE id=? AND kind='photo'").bind(id).first())throw new HttpError(400,'A selected photograph no longer exists. Please refresh.');
