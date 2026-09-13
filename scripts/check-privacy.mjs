@@ -51,12 +51,14 @@ export async function checkPrivacy(f){
    for(const flag of ['true','false']){
     env.PUBLIC_READ=flag;
     for(const email of members)await deniedMatrix(email,403);
-    // Public quiz needs neither the allowlist nor a database, even for a
-    // signed-in account whose archive membership is currently disabled.
+    // Public quiz may read only the narrowly scoped quiz configuration.
+    // Every other storage operation, including journey progress, stays poisoned.
+    env.DB={prepare(sql){assert.equal(sql,"SELECT id,kind,data,created_at AS createdAt,updated_at AS updatedAt,revision FROM entries WHERE kind='letter-question'");return {all:async()=>({results:[]})};}};
     for(const email of [null,...members]){
      const answer=await json(await journey.POST(request('/api/journey','POST',email,{index:0,answer:'Vistopia'})));
      assert.equal(answer.correct,true);assert.equal(answer.temporary,true);
     }
+    env.DB=poison;
    }
   }
   env.EDITOR_EMAILS=configured;

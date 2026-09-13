@@ -36,6 +36,6 @@ export async function checkTitles({entries,backup,module}){
  }
  for(const data of [{page:-1,chineseSubtitle:'a',mainTitle:'a'},{page:6,chineseSubtitle:'a',mainTitle:'a'},{page:1.5,chineseSubtitle:'a',mainTitle:'a'},{page:0,chineseSubtitle:'a',mainTitle:'  '},{page:0,chineseSubtitle:'a'.repeat(81),mainTitle:'a'},{page:0,chineseSubtitle:'a',mainTitle:'a'.repeat(161)},{page:0,chineseSubtitle:null,mainTitle:'a'},{page:0,chineseSubtitle:'a',mainTitle:'a',order:2}])await call(members[0],'POST',{id:crypto.randomUUID(),kind:'letter-title',data},400);
  for(const config of [undefined,'',' ','broken-email']){if(config===undefined)delete globalThis.__giftTestEnv.EDITOR_EMAILS;else globalThis.__giftTestEnv.EDITOR_EMAILS=config;for(const email of members)await call(email,'GET',undefined,403);}
- }finally{globalThis.__giftTestEnv=savedEnv;}
+ }finally{for(const key of Object.keys(globalThis.__giftTestEnv))delete globalThis.__giftTestEnv[key];Object.assign(globalThis.__giftTestEnv,savedEnv);}
  console.log(`PASS: ${count} Memory title checks.`);return count;
 }

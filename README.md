@@ -105,3 +105,11 @@ Library poems, comments and custom letter poems use protected entry records and 
 Every future production Site version must have its exact editable source committed and pushed to this GitHub repository. Develop from the verified production baseline, run isolated checks, commit, push the exact candidate, then deploy that SHA to Sites. Only after successful live release verification advance GitHub main to that exact deployed SHA and tag the release. Failed or incomplete verification leaves main unchanged. Never deploy a Sites-only source revision.
 
 Memory titles use private `letter-title` entries with one page (0–5) per record. Authorized members edit subtitle (up to 80 characters; blank hides subtitle) and main title (1–160 characters) in Letter settings. Reset deletes the override. Defaults stay public and immutable. Existing membership, revision checks and full backup apply; no SQL migration is needed.
+
+## Version 10 Quiz Settings
+
+Letter settings now contains six compact quiz editors. Each question uses an optional protected `letter-question` entry and the existing unique deduplication key and optimistic revision checks. Reset requires confirmation and restores exact Version 9 defaults. Questions (1–2000 characters) and answers (1–500) must not be blank; each feedback field may be empty and is limited to 3000 characters. Surrounding whitespace is trimmed; Unicode and multiline text are supported. Memory Titles remain the only title editor.
+
+`GET /api/journey/public` returns only `{questions:[{index,text}]}`. The server-rendered page uses the same projection. `GET /api/journey/settings` and all full generic entry operations require archive membership. Quiz POST resolves configuration server-side and returns only the submitted attempt's result and feedback. Date matching follows the configured expected answer, not the page number. Existing journey progress is never reset by settings operations. Overrides are included in full authorized backups. No schema migration or hosting permission change is required.
+
+The public quiz remains an intentional answer oracle. Authors should not put sensitive content in public questions or feedback. Private answers are not in the public projection, page props, or client bundle; correct feedback is delivered only after an answer attempt, rather than preloaded on completed chapters.

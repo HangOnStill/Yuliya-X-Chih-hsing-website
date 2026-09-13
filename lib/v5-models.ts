@@ -11,6 +11,8 @@ export const planData=z.object({title,startDate:date,targetDate:date,fromCity:z.
 export const capsuleData=z.object({title,body:note,person,occasion:z.enum(['Birthday','Anniversary','Just because']),unlockAt:z.string().datetime(),stage:z.enum(['draft','sealed'])});
 export const nicknameData=z.object({name:z.string().trim().min(1,'Give this nickname a name.').max(100),person,since:dateValue.default(''),origin:z.string().max(4000).default(''),funnyMoment:z.string().max(6000).default('')});
 export const letterTitleData=z.object({page:z.number().int().min(0).max(5),chineseSubtitle:z.string().trim().max(80),mainTitle:z.string().trim().min(1,'Write a main title.').max(160)}).strict();
+export const letterQuestionData=z.object({page:z.number().int().min(0).max(5),question:z.string().trim().min(1,'Write a question.').max(2000),answer:z.string().trim().min(1,'Write an answer.').max(500),successFeedback:z.string().trim().max(3000),wrongFeedback:z.string().trim().max(3000),emptyFeedback:z.string().trim().max(3000)}).strict();
+export type LetterQuestionData=z.infer<typeof letterQuestionData>;
 export const savedPoemData=z.object({title,author:z.string().max(200).default(''),text:z.string().trim().min(1,'Write a poem first.').max(8000),yuliyaComment:z.string().max(4000).default(''),chihComment:z.string().max(4000).default('')});
 export const letterPoemData=z.object({slot:z.number().int().min(0).max(5),title,author:z.string().max(200).default(''),text:z.string().trim().min(1,'Write a poem first.').max(8000)});
 export const entryInput=z.discriminatedUnion('kind',[
@@ -21,6 +23,7 @@ export const entryInput=z.discriminatedUnion('kind',[
  z.object({id,kind:z.literal('capsule'),data:capsuleData}),
  z.object({id,kind:z.literal('nickname'),data:nicknameData}),
  z.object({id,kind:z.literal('letter-title'),data:letterTitleData}),
+ z.object({id,kind:z.literal('letter-question'),data:letterQuestionData}),
  z.object({id,kind:z.literal('poem'),data:savedPoemData}),
  z.object({id,kind:z.literal('letter-poem'),data:letterPoemData})
 ]);
