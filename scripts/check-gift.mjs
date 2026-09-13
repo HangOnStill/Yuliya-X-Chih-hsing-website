@@ -150,6 +150,8 @@ try{
  checks+=await checkTitles({entries,backup,module});
  const {checkQuestions}=await import('./check-letter-questions.mjs');
  checks+=await checkQuestions({entries,backup,journey,DB,module});
+ const {checkRefreshMedia}=await import('./check-refresh-media.mjs');
+ checks+=await checkRefreshMedia({entries,photos,photo,media,backup,DB,module});
  const {checkClientPrivacy}=await import('./check-client-privacy.mjs');
  checks+=await checkClientPrivacy();
  console.log(`PASS: ${checks} checks covering V3/V4 continuity, V5 wish-to-memory transactions, independent perspectives and collections, future-letter locks, attachment access, full-export authorization, HEIC originals, timeline planning, shared nickname stories, validation and revision conflicts.`);

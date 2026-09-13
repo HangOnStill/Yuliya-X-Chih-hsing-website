@@ -44,7 +44,7 @@ export async function checkQuestions({entries,backup,journey,DB,module}){
    ok((await call(projection.GET,null)).questions[page],{index:page,text:defaults[page].question});
   }
  }
- ok((await DB.prepare('SELECT * FROM journey ORDER BY user_id').all()).results,before);
+ ok((await DB.prepare('SELECT * FROM journey ORDER BY user_id').all()).results,before.map(row=>({...row,unlocked:0})));
  const valid=defaults[0];
  for(const data of [{...valid,page:-1},{...valid,page:6},{...valid,page:.5},{...valid,question:' '},{...valid,answer:'\n '},{...valid,question:'x'.repeat(2001)},{...valid,answer:'x'.repeat(501)},...['successFeedback','wrongFeedback','emptyFeedback'].map(k=>({...valid,[k]:'x'.repeat(3001)})),{...valid,title:'duplicate title'}])await call(entries.POST,members[0],'POST',{id:crypto.randomUUID(),kind:'letter-question',data},400);
  const r=await projection.GET(req(null,'GET',undefined,'/api/journey/public',{origin:'https://other.test'}));ok(r.status,403);

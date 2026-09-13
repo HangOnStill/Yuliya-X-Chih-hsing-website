@@ -1,18 +1,18 @@
 "use client";
-import {Mail,Images,Sparkles,CalendarHeart,LockKeyhole,MapPinned,BookHeart,Settings2,Heart,X,PanelLeftClose,PanelLeftOpen,Smile} from 'lucide-react';
+import {Mail,Images,Sparkles,CalendarHeart,LockKeyhole,MapPinned,BookHeart,Leaf,Settings2,Heart,X,PanelLeftClose,PanelLeftOpen,Smile} from 'lucide-react';
 import {Sidebar,SidebarContent,SidebarHeader,SidebarFooter,SidebarMenu,SidebarMenuItem,SidebarMenuButton,useSidebar} from '@/components/ui/sidebar';
 import {Button} from '@/components/ui/button';
 
 const items=[
  ['letter','Love letter','情書',Mail],
- ['memories','Memories','記憶庫',Images],
- ['keepsakes','Keepsakes','紀念冊與備份',BookHeart],
- ['wishes','Wishes','願望',Sparkles],
- ['poetry','Our poetry','詩詞庫',BookHeart],
- ['nicknames','Our nicknames','暱稱小本',Smile],
- ['plan','Our next year','生活計畫',CalendarHeart],
- ['capsules','Future letters','給未來的信',LockKeyhole],
- ['timeline','Our places','相遇地圖',MapPinned],
+ ['memories','Memories','音像輯',Images],
+ ['keepsakes','Keepsakes','記憶庫',BookHeart],
+ ['wishes','Wishes','願望單',Sparkles],
+ ['poetry','Our poetry','萬葉鈔',Leaf],
+ ['nicknames','Our nicknames','暱稱賬',Smile],
+ ['plan','Our next year','規劃錄',CalendarHeart],
+ ['capsules','Future letters','未來書',LockKeyhole],
+ ['timeline','Our places','緣の島',MapPinned],
 ] as const;
 
 export function GiftSidebarToggle(){

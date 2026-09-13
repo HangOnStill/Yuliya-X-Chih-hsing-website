@@ -1,6 +1,6 @@
 "use client";
 import {useState} from 'react';
-import {BookHeart,Plus,Pencil,Trash2} from 'lucide-react';
+import {Leaf,Plus,Pencil,Trash2} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
@@ -10,6 +10,7 @@ import {saveEntry,deleteEntry} from '@/lib/v5-client';
 import {Choice,Field,Confirm} from './gift-controls';
 import {EditButton} from './gift-access';
 import {toast} from 'sonner';
+import {builtinPoetry} from '@/lib/builtin-poetry';
 
 type SavedPoem=Extract<Entry,{kind:'poem'}>;
 type LetterPoem=Extract<Entry,{kind:'letter-poem'}>;
@@ -18,20 +19,23 @@ const blank={title:'',author:'',text:'',yuliyaComment:'',chihComment:''};
 
 export default function PoetryLibrary({entries,error,refresh}:ArchiveProps){
  const [query,setQuery]=useState(''),[editing,setEditing]=useState<SavedPoem|'new'|null>(null),[removing,setRemoving]=useState<SavedPoem|null>(null),[busy,setBusy]=useState(false);
+ const [template,setTemplate]=useState<(typeof builtinPoetry)[number]|null>(null);
+ const builtinShown=builtinPoetry.filter(p=>[p.title,p.author,p.text].join('\n').toLowerCase().includes(query.trim().toLowerCase()));
  const poems=entries.filter((e):e is SavedPoem=>e.kind==='poem');
  const shown=poems.filter(e=>[e.data.title,e.data.author,e.data.text,e.data.yuliyaComment,e.data.chihComment].join('\n').toLowerCase().includes(query.trim().toLowerCase()));
  async function remove(){if(!removing)return;setBusy(true);try{await deleteEntry(removing);setRemoving(null);refresh();toast.success('Poem removed from our collection.');}catch(e){toast.error((e as Error).message);}finally{setBusy(false);}}
- return <section><div className="section-top"><div><p className="eyebrow">OUR POETRY · 詩詞庫</p><h2>Words we keep together.</h2><p className="quiet">收藏喜歡的詩詞，也留下我們各自讀到的心情。</p></div><EditButton onClick={()=>setEditing('new')}><Plus size={17}/>收藏詩詞</EditButton></div>
+ return <section><div className="section-top"><div><p className="eyebrow">OUR POETRY · 萬葉鈔</p><h2><Leaf aria-hidden="true"/> 萬葉鈔</h2><p className="quiet">收藏喜歡的詩詞，也留下我們各自讀到的心情。</p></div><EditButton onClick={()=>setEditing('new')}><Plus size={17}/>收藏詩詞</EditButton></div>
  <Input aria-label="搜尋詩詞、作者與評論" placeholder="搜尋詩詞、作者與評論…" value={query} onChange={e=>setQuery(e.target.value)}/>
  {error&&<p role="alert" className="field-error">{error}<Button variant="ghost" onClick={()=>refresh()}>Retry</Button></p>}
  <div className="nickname-grid poetry-library-grid">{shown.map(e=><article key={e.id} className="v5-card"><h3>{e.data.title}</h3><p className="quiet">{e.data.author||'作者未註明'}</p><p className="saved-poem-text">{e.data.text}</p><div className="form-pair poem-comments"><div><h4>Yuliya 的評論</h4><p>{e.data.yuliyaComment||'等你寫下讀後的心情。'}</p></div><div><h4>Chih-hsing 的評論</h4><p>{e.data.chihComment||'等你寫下讀後的心情。'}</p></div></div><div className="dialog-actions"><EditButton variant="outline" onClick={()=>setEditing(e)}><Pencil size={16}/>編輯詩詞與評論</EditButton><EditButton variant="ghost" size="icon" aria-label={'刪除詩詞 '+e.data.title} onClick={()=>setRemoving(e)}><Trash2 size={16}/></EditButton></div></article>)}</div>
- {!shown.length&&!error&&<div className="v5-empty"><BookHeart/><p>{poems.length?'沒有找到符合的詩詞。':'把第一首喜歡的詩，放進我們的收藏。'}</p></div>}
+ <h3>情書選集 · 內建詩詞</h3><p className="builtin-poem-note">所有目前可選的詩詞摘句，重複篇目合併顯示。另存後可編輯正文與兩人的評論；原選集保留。</p><div className="nickname-grid poetry-library-grid">{builtinShown.map(p=><article key={p.id} className="v5-card"><h3>{p.title}</h3><p className="saved-poem-text">{p.text}</p><EditButton variant="outline" onClick={()=>setTemplate(p)}><Plus size={16}/>另存並寫評論</EditButton></article>)}</div>{template&&<PoemEditor initial={template} close={()=>setTemplate(null)} saved={refresh}/>}
+ {!shown.length&&!builtinShown.length&&!error&&<div className="v5-empty"><Leaf/><p>{poems.length?'沒有找到符合的詩詞。':'把第一首喜歡的詩，放進我們的收藏。'}</p></div>}
  {editing&&<PoemEditor entry={editing==='new'?undefined:editing} close={()=>setEditing(null)} saved={refresh}/>}
  <Confirm open={!!removing} busy={busy} title="刪除這首收藏？" description="詩詞與兩人的評論將被刪除；已放進情書的副本會保留。" onClose={()=>setRemoving(null)} onConfirm={remove}/>
  </section>;
 }
-function PoemEditor({entry,close,saved}:{entry?:SavedPoem;close:()=>void;saved:()=>unknown}){
- const [id]=useState(()=>entry?.id||crypto.randomUUID()),[data,setData]=useState(entry?.data||blank),[busy,setBusy]=useState(false),[error,setError]=useState(''),[dirty,setDirty]=useState(false),[discard,setDiscard]=useState(false);
+function PoemEditor({entry,initial,close,saved}:{entry?:SavedPoem;initial?:typeof blank;close:()=>void;saved:()=>unknown}){
+ const [id]=useState(()=>entry?.id||crypto.randomUUID()),[data,setData]=useState(entry?.data||initial||blank),[busy,setBusy]=useState(false),[error,setError]=useState(''),[dirty,setDirty]=useState(false),[discard,setDiscard]=useState(false);
  function change(p:Partial<typeof data>){setData(d=>({...d,...p}));setDirty(true);}
  function leave(){if(busy)return;if(dirty)setDiscard(true);else close();}
  async function save(e:React.FormEvent){e.preventDefault();const parsed=savedPoemData.safeParse(data);if(!parsed.success){setError(parsed.error.issues[0].message);return;}setBusy(true);try{await saveEntry({id,kind:'poem',data:parsed.data},entry);saved();close();toast.success('詩詞與評論已收藏。');}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
@@ -49,5 +53,5 @@ function LetterPoemEditor({slot,existing,poems,refresh}:{slot:number;existing?:L
  const [id]=useState(()=>existing?.id||crypto.randomUUID()),[data,setData]=useState(existing?.data||{slot,title:'',author:'',text:''}),[busy,setBusy]=useState(false),[error,setError]=useState('');
  async function save(){const parsed=letterPoemData.safeParse(data);if(!parsed.success){setError(parsed.error.issues[0].message);return;}setBusy(true);try{await saveEntry({id,kind:'letter-poem',data:parsed.data},existing);refresh();toast.success('已放進這一頁情書。');}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
  async function reset(){if(!existing)return;setBusy(true);try{await deleteEntry(existing);refresh();toast.success('已恢復原有詩詞選集。');}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
- return <div className="nickname-form"><Choice label="從收藏填入，或直接在下方輸入" value="custom" disabled={busy} options={[{value:'custom',label:'自行輸入／修改'},...poems.map(p=>({value:p.id,label:p.data.title}))]} onChange={v=>{const p=poems.find(p=>p.id===v);if(p)setData({slot,title:p.data.title,author:p.data.author,text:p.data.text});}}/><fieldset disabled={busy} className="nickname-form"><PoemFields data={data} prefix={'letter-poem-'+slot} change={v=>setData(d=>({...d,...v}))}/></fieldset>{error&&<p role="alert" className="field-error">{error}</p>}<div className="dialog-actions"><EditButton type="button" disabled={busy} onClick={save}>儲存到第 {slot+1} 頁</EditButton>{existing&&<EditButton type="button" disabled={busy} variant="outline" onClick={reset}>恢復選集詩詞</EditButton>}</div><p className="small-meta">新寫的詩也可另到詩詞庫收藏。此處覆蓋這一頁的選集設定。</p></div>;
+ return <div className="nickname-form"><Choice label="從收藏填入，或直接在下方輸入" value="custom" disabled={busy} options={[{value:'custom',label:'自行輸入／修改'},...poems.map(p=>({value:p.id,label:p.data.title}))]} onChange={v=>{const p=poems.find(p=>p.id===v);if(p)setData({slot,title:p.data.title,author:p.data.author,text:p.data.text});}}/><fieldset disabled={busy} className="nickname-form"><PoemFields data={data} prefix={'letter-poem-'+slot} change={v=>setData(d=>({...d,...v}))}/></fieldset>{error&&<p role="alert" className="field-error">{error}</p>}<div className="dialog-actions"><EditButton type="button" disabled={busy} onClick={save}>儲存到第 {slot+1} 頁</EditButton>{existing&&<EditButton type="button" disabled={busy} variant="outline" onClick={reset}>恢復選集詩詞</EditButton>}</div><p className="small-meta">新寫的詩也可另到萬葉鈔收藏。此處覆蓋這一頁的選集設定。</p></div>;
 }

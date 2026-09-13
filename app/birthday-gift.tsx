@@ -60,7 +60,7 @@ function BirthdayGiftContent({questions:initialQuestions,canEdit=false,signInUrl
  const answerRef=useRef<HTMLInputElement>(null),videoUpload=useRef<HTMLInputElement>(null);
  const [recordPoem,setRecordPoem]=useState(0);
  const [ready,setReady]=useState(false),[reducedMotion,setReducedMotion]=useState(false);
- const photo=photos.find(p=>p.kind==='photo'&&p.slot===index),video=photos.find(p=>p.kind==='video');
+ const photo=photos.find(p=>p.kind==='photo'&&p.slot===index),video=photos.find(p=>p.kind==='video'&&p.tags.split(',').includes('letter-surprise'))||photos.filter(p=>p.kind==='video').at(-1);
  const customPoem=poetryEntries.find(e=>e.kind==='letter-poem'&&e.data.slot===index);
  const poem:Poem=customPoem?.kind==='letter-poem'?{lines:customPoem.data.text.split(/\r?\n/).filter(l=>l.trim()),source:[customPoem.data.author,customPoem.data.title].filter(Boolean).join(' · ')}:(poemSets.find(s=>s.id===prefs.sets[index])||poemSets[0]).poems[index];
  const refreshPhotos=useCallback(async()=>{if(!canEdit){setPhotoLoading(false);return;}try{const r=await request('/api/photos');setPhotos(r.photos);setPhotoError('');}catch(e){setPhotoError((e as Error).message);}finally{setPhotoLoading(false);}},[canEdit]);
@@ -74,7 +74,8 @@ function BirthdayGiftContent({questions:initialQuestions,canEdit=false,signInUrl
  useEffect(()=>{if(opened&&tab==='letter'&&!envelope){const t=setTimeout(()=>journeyRef.current?.scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'start'}),80);return()=>clearTimeout(t);}},[opened,envelope,index,reducedMotion]);
  function openLetter(){if(opened){setTimeout(()=>journeyRef.current?.scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'start'}),80);return;}if(prefs.envelope&&!reducedMotion){setFlap(false);setEnvelope(true);}else{setOpened(true);setIndex(Math.min(unlocked,5));}}
  async function checkAnswer(e:React.FormEvent){e.preventDefault();if(busy)return;setBusy(true);try{const r=await request('/api/journey',{method:'POST',body:JSON.stringify({index,answer})});setFeedback(r.feedback);setCorrect(r.correct);setUnlocked(r.unlocked);setJourneyError('');if(r.correct&&prefs.poetry)setPoemVisible(true);if(!r.correct)answerRef.current?.select();}catch(e){setFeedback((e as Error).message);setCorrect(false);}finally{setBusy(false);}}
- async function uploadVideo(file?:File){if(!file)return;if(file.type!=='video/mp4'||file.size>24*1024*1024){toast.error('Choose an MP4 up to 24 MB.');return;}setVideoBusy(true);try{await request('/api/photos',{method:'POST',body:file,headers:{'Content-Type':file.type,'X-File-Name':encodeURIComponent(file.name)}});await refreshPhotos();toast.success('Your surprise video is ready.');}catch(e){toast.error((e as Error).message);}finally{setVideoBusy(false);if(videoUpload.current)videoUpload.current.value='';}}
+ async function uploadVideo(file?:File){if(!file)return;if(file.type!=='video/mp4'||file.size>24*1024*1024){toast.error('Choose an MP4 up to 24 MB.');return;}setVideoBusy(true);try{const uploaded=await request('/api/photos',{method:'POST',body:file,headers:{'Content-Type':file.type,'X-File-Name':encodeURIComponent(file.name)}});await request('/api/photos/'+uploaded.photo.id,{method:'PATCH',body:JSON.stringify({...uploaded.photo,tags:[...new Set([...uploaded.photo.tags.split(',').filter(Boolean),'letter-surprise'])].join(',')})});await refreshPhotos();toast.success('Your surprise video is ready.');}catch(e){toast.error((e as Error).message);}finally{setVideoBusy(false);if(videoUpload.current)videoUpload.current.value='';}}
+ useEffect(()=>{if(index>=unlocked){setFeedback('');setCorrect(false);}},[unlocked,index]);
  const solved=index<unlocked;
  return <GiftAccess.Provider value={canEdit}><SidebarProvider open={prefs.sidebarOpen} onOpenChange={sidebarOpen=>setPrefs(p=>({...p,sidebarOpen}))} className="v5-app" style={{"--sidebar-width":"15rem"} as CSSProperties}><GiftSidebar tab={tab} navigate={navigate} settings={()=>setSettings(true)}/><div className="gift-app" onErrorCapture={e=>{if(canEdit&&['IMG','VIDEO','AUDIO'].includes((e.target as HTMLElement).tagName))void request('/api/journey').catch(()=>{});}}>
   <a className="skip-link" href="#main">Skip to content</a>
@@ -99,7 +100,7 @@ function BirthdayGiftContent({questions:initialQuestions,canEdit=false,signInUrl
      </section>}
      {photoError&&!opened&&<p className="small-meta">Your letter is ready. Open Memories to connect the photographs.</p>}
     </section>
-    {canEdit?<><section hidden={tab!=='memories'} className="tab-panel"><MemoryArchive titles={titles} photos={photos.filter(p=>p.kind==='photo')} loading={photoLoading} error={photoError} refresh={refreshPhotos}/></section>
+    {canEdit?<><section hidden={tab!=='memories'} className="tab-panel"><MemoryArchive titles={titles} photos={photos} loading={photoLoading} error={photoError} refresh={refreshPhotos}/></section>
     <section hidden={tab!=='wishes'} className="tab-panel"><Wishes active={tab==='wishes'} photos={photos} onMemorySaved={()=>{refreshPhotos();navigate('memories');}}/></section>
     <section hidden={tab!=='poetry'} className="tab-panel"><PoetryLibrary entries={poetryEntries} error={poetryError} refresh={refreshPoetry}/></section>
     <section hidden={tab!=='nicknames'} className="tab-panel"><Nicknames active={tab==='nicknames'}/></section>

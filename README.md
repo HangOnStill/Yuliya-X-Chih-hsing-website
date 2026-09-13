@@ -108,6 +108,14 @@ Memory titles use private `letter-title` entries with one page (0–5) per recor
 
 ## Version 10 Quiz Settings
 
+### Subsequent Phase 3 update
+
+The user's later instruction supersedes Version 10's progress-preservation rule: saving or resetting a quiz override now atomically resets both members' sequential progress to that question, preserving earlier completions. Stale edits cannot reset progress, and an old in-flight correct answer cannot re-unlock a concurrently edited question. Reload or return to the page to receive another member's changes.
+
+The navigation names are now 音像輯, 記憶庫, 願望單, 萬葉鈔, 暱稱賬, 規劃錄, 未來書, and 緣の島. 萬葉鈔 uses a leaf icon and includes all 20 unique excerpts from the existing selectable poetry sets, with an action to save a private editable/commentable copy. No personal collection is overwritten.
+
+音像輯's Add memories accepts photos, MP4/WebM videos, and MP3/M4A/WAV/OGG/WebM audio. Audio/video limit is 24 MB; existing photo/HEIC limits remain. Uploaded bytes are signature-checked, deduplicated, stored privately, playable in the detail view, and included in backups. Only photographs can be paired with letter questions. General video uploads do not automatically replace the existing surprise video; the dedicated surprise upload selects that video explicitly. No database migration is needed.
+
 Letter settings now contains six compact quiz editors. Each question uses an optional protected `letter-question` entry and the existing unique deduplication key and optimistic revision checks. Reset requires confirmation and restores exact Version 9 defaults. Questions (1–2000 characters) and answers (1–500) must not be blank; each feedback field may be empty and is limited to 3000 characters. Surrounding whitespace is trimmed; Unicode and multiline text are supported. Memory Titles remain the only title editor.
 
 `GET /api/journey/public` returns only `{questions:[{index,text}]}`. The server-rendered page uses the same projection. `GET /api/journey/settings` and all full generic entry operations require archive membership. Quiz POST resolves configuration server-side and returns only the submitted attempt's result and feedback. Date matching follows the configured expected answer, not the page number. Existing journey progress is never reset by settings operations. Overrides are included in full authorized backups. No schema migration or hosting permission change is required.
