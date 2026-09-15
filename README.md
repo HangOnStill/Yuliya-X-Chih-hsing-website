@@ -36,6 +36,14 @@ In Letter settings, a member can copy a saved poem into any of the six pages or 
 
 ### Media and backups
 
+**Version 12 candidate (not yet live-verified):** this source adds Memory Library
+targets of photo 15 MiB, audio 60 MiB, and video 100 MiB. Audio/video use bounded
+streaming and incremental SHA-256, not whole-file buffering. These are application
+limits, not a demonstrated Sites upload ceiling. The last verified deployed
+release above remains Version 11 until candidate deployment and live checks.
+See [Version 12 media report](VERSION_12_MEDIA_UPLOAD_CHANGELOG.md) for evidence
+and release status. The following 12/24 MiB limits describe Version 11.
+
 - 音像輯 supports photo uploads, MP4/WebM video, and MP3/M4A/WAV/OGG/WebM audio. Audio/video uploads are limited to 24 MiB; browser playback depends on codec support.
 - Standard archive images are limited to 12 MiB. HEIC/HEIF input is limited to 24 MiB and converted locally; archive uploads retain the original alongside the display image.
 - Only photographs can be paired with quiz chapters. A general video upload does not select the letter's surprise video; that has a dedicated upload control.
@@ -43,6 +51,10 @@ In Letter settings, a member can copy a saved poem into any of the six pages or 
 - Future Letters use a server-clock date lock. Normal archive views withhold sealed bodies and attachments until the opening time. Sealed letters cannot be edited.
 - **Full ZIP backups include sealed future letters**, as well as records, settings, progress, and media. Export requires confirmation. The ZIP is a portable JSON/media export, not an encrypted download or a one-click restore system.
 - Annual PDFs are generated in the browser as rendered pages. Large exports need sufficient device memory.
+- The Version 12 candidate streams full ZIPs to a selected local file on browsers
+  offering Save File support. Other browsers retain the ZIP in memory and are
+  limited to 256 MiB. The existing classic ZIP encoder does not support ZIP64;
+  exports reaching 4 GiB or 65,535 entries stop instead of saving a corrupt ZIP.
 - Operational backup policy: keep an encrypted copy quarterly and before/after major data-affecting releases, with a checksum and record-count ledger. Encrypt exported ZIPs separately before storage.
 - A source-code bundle is separate from an archive backup and contains no uploaded website data.
 
