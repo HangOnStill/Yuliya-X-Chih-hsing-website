@@ -1,5 +1,5 @@
 # Yuliya × Chih-hsing
-## Private shared memory archive · Version 11
+## Private shared memory archive
 
 A love letter and a shared home for Yuliya and Chih-hsing's photographs, recordings, poems, wishes, and future letters.
 
@@ -7,9 +7,10 @@ A love letter and a shared home for Yuliya and Chih-hsing's photographs, recordi
 
 ## Release identity
 
-- **Production Site:** Version 11.
-- **Exact deployed source:** annotated tag `v11` → `17d9602c74d1b1c140c08d1b9b95694407cc6a8e`.
-- **Current source branch:** `production` may include later documentation and governance commits that have not been deployed as a new Site version.
+- **Deployed streaming baseline:** Version 12 → `f1dcf30fef1763d274bf92f8cac09355c86e0ae1` (September 15, 2026).
+- **Current source policy:** Memory Library photo 20 MiB, audio 60 MiB, video 150 MiB. The owner requested this follow-up without tests; these are application limits, not live-verified platform guarantees.
+- **Last immutable release tag:** `v11` → `17d9602c74d1b1c140c08d1b9b95694407cc6a8e`. No `v12` tag has been created.
+- **Current source branch:** `production`; exact deployment identity is tracked separately in Sites version history. A source update alone does not prove deployment or live verification.
 
 A README or governance commit does not create a new application version. The package metadata version is also separate from the Sites release number.
 
@@ -36,16 +37,15 @@ In Letter settings, a member can copy a saved poem into any of the six pages or 
 
 ### Media and backups
 
-**Version 12 candidate (not yet live-verified):** this source adds Memory Library
-targets of photo 15 MiB, audio 60 MiB, and video 100 MiB. Audio/video use bounded
-streaming and incremental SHA-256, not whole-file buffering. These are application
-limits, not a demonstrated Sites upload ceiling. The last verified deployed
-release above remains Version 11 until candidate deployment and live checks.
-See [Version 12 media report](VERSION_12_MEDIA_UPLOAD_CHANGELOG.md) for evidence
-and release status. The following 12/24 MiB limits describe Version 11.
+**Current application limits:** photo 20 MiB, audio 60 MiB, video 150 MiB.
+Audio/video use bounded streaming and incremental SHA-256, not whole-file
+buffering. The owner explicitly waived tests for the 20/150 MiB follow-up.
+Sites ingress may reject a file below these application limits; 150 MiB has not
+been demonstrated live. See [Version 12 media report](VERSION_12_MEDIA_UPLOAD_CHANGELOG.md)
+for historical test evidence and the follow-up waiver.
 
-- 音像輯 supports photo uploads, MP4/WebM video, and MP3/M4A/WAV/OGG/WebM audio. Audio/video uploads are limited to 24 MiB; browser playback depends on codec support.
-- Standard archive images are limited to 12 MiB. HEIC/HEIF input is limited to 24 MiB and converted locally; archive uploads retain the original alongside the display image.
+- 音像輯 supports photos up to 20 MiB, MP4/WebM video up to 150 MiB, and MP3/M4A/WAV/OGG/WebM audio up to 60 MiB; browser playback depends on codec support.
+- HEIC/HEIF input remains limited to 24 MiB and is converted locally to a display JPEG limited to 20 MiB; archive uploads retain the original. Generic assets, Future Letter attachments, and the dedicated surprise-video limit are unchanged.
 - Only photographs can be paired with quiz chapters. A general video upload does not select the letter's surprise video; that has a dedicated upload control.
 - Voice recordings can accompany photographs, poetry readings, and future letters.
 - Future Letters use a server-clock date lock. Normal archive views withhold sealed bodies and attachments until the opening time. Sealed letters cannot be edited.
@@ -123,6 +123,6 @@ See [Source Governance](SOURCE_GOVERNANCE.md) and the [Phase 4G implementation r
 
 ## History and hosting direction
 
-The earlier birthday-gift application evolved into this shared archive. Earlier changelogs and Phase reports remain historical records; this README describes Version 11.
+The earlier birthday-gift application evolved into this shared archive. Earlier changelogs and Phase reports remain historical records; current source includes the Version 12 streaming path and the owner-requested 20/150 MiB follow-up.
 
 Current hosting decision: **stay on ChatGPT Sites and prepare a Cloudflare exit plan**. Phase 5 migration remains dormant until a documented trigger and separate authorization. GitHub Pages is not the application runtime; the complete application requires its server, private storage, and identity integration.

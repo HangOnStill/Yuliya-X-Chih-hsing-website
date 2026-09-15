@@ -61,7 +61,7 @@ export async function storeMemoryStream(req:Request,store:R2Bucket,key:string,mi
    for(const r of results)if(r.status==='rejected')throw r.reason;
   }else{
    // Missing/unknown length cannot safely use an unbounded tee or full buffer.
-   // One 5 MiB part, sequential uploadPart calls, and <=20 retained ETags.
+   // One 5 MiB part, sequential uploadPart calls, and <=30 retained ETags.
    multipart=await store.createMultipartUpload(key,{httpMetadata:{contentType:mime}});
    const parts:R2UploadedPart[]=[];let part=new Uint8Array(PART_BYTES),filled=0;
    for await(const chunk of chunks()){
