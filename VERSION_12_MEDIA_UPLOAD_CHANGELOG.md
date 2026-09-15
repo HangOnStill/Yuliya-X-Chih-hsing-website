@@ -1,5 +1,30 @@
 # Version 12 large-media upload — candidate report
 
+## September 15 follow-up: owner-requested limits without tests
+
+Version 12 was deployed successfully from `f1dcf30fef1763d274bf92f8cac09355c86e0ae1`
+at 2026-09-15T13:55:40Z, environment revision 2. Site version ID:
+`appgprj_6aa12247f6c481919289d2920d777d01~appgver_32b2506599508191990b13c0aa5b9cf9`;
+deployment `appgdep_6aa94e50ea60819183948f49be458632`.
+The exact merged source passed 2,932 checks, typecheck and build before deployment.
+
+Before any synthetic live upload, the owner superseded the planned probes:
+increase photos to **20 MiB** and videos to **150 MiB**, without tests. Audio stays
+at **60 MiB**. This follow-up changes the shared client/server policy and UI only,
+plus documentation and the multipart buffer comment (up to 30 sequential parts).
+The streaming architecture, raw HEIC 24 MiB, unrelated limits, schema, audience
+and authentication remain unchanged. Necessary release builds are not upload tests.
+
+**No automated tests or live size probes were run for the 20/150 MiB follow-up.**
+The earlier 2,932 checks apply only to the 15/60/100 MiB baseline and must not be
+represented as verification of 20/150 MiB. Verified production upload ceiling:
+**unknown**. No synthetic live objects were created; no cleanup is required.
+No `v12` release tag is created because the original live-verification gate was
+not completed. A subsequent save/deploy receives a new Sites version number.
+
+The rest of this document is the historical Version 12 candidate report, with
+its original 15/60/100 MiB targets and now-superseded pending test plan.
+
 ## SOURCE BASE
 
 - Repository: HangOnStill/Yuliya-X-Chih-hsing-website.
