@@ -22,4 +22,55 @@ export async function exportYearbook({year,photos,wishes,entries,setId,progress,
  await document.fonts.ready;for(const [i,p]of pages.entries()){if(signal.aborted)throw new DOMException('Cancelled','AbortError');progress(`Making PDF page ${i+1} of ${pages.length}…`);const jpeg=await toJpeg(p,{quality:.94,pixelRatio:1.6,width:794,height:1123,backgroundColor:'#fffaf8',skipFonts:true});if(i)pdf.addPage();pdf.addImage(jpeg,'JPEG',0,0,210,297,undefined,'FAST');}if(signal.aborted)throw new DOMException('Cancelled','AbortError');pdf.save(`YC_${year}_Yearbook.pdf`);
  }finally{root.remove();}
 }
-export async function exportBackup(progress:(s:string)=>void,signal:AbortSignal){const {Zip,ZipPassThrough,strToU8}=await import('fflate');const manifest=await request('/api/backup',{method:'POST',body:JSON.stringify({confirmFullArchive:true})});const token=manifest.exportToken;delete manifest.exportToken;const files:{path:string;url:string;size:number}[]=[];const safe=(name:string)=>name.replace(/[^\p{L}\p{N}._-]/gu,'_').slice(0,150);for(const p of manifest.photos as Photo[])files.push({path:`media/${p.id}-${safe(p.filename)}`,url:'/api/media/'+p.id,size:p.size});for(const a of manifest.assets as Asset[])files.push({path:`attachments/${a.id}-${safe(a.filename)}`,url:`/api/assets/${a.id}?export=${encodeURIComponent(token)}`,size:a.size});manifest.files=files.map(({path,size})=>({path,size}));try{manifest.displayPreferences=JSON.parse(localStorage.getItem('yc-display-preferences')||'null');}catch{manifest.displayPreferences=null;}const chunks:Uint8Array[]=[];let resolveZip:(v:Blob)=>void,rejectZip:(e:unknown)=>void;const done=new Promise<Blob>((resolve,reject)=>{resolveZip=resolve;rejectZip=reject;});const zip=new Zip((err,data,final)=>{if(err){rejectZip(err);return;}if(data)chunks.push(data);if(final)resolveZip(new Blob(chunks as BlobPart[],{type:'application/zip'}));});function addText(name:string,text:string){const f=new ZipPassThrough(name);zip.add(f);f.push(strToU8(text),true);}try{addText('manifest.json',JSON.stringify(manifest,null,2));addText('READ_ME.txt','Yuliya × Chih-hsing — complete archive backup, format v5\n\nThis ZIP contains private photos, HEIC originals, audio, video, wishes, plans, perspectives, nicknames, quiz progress and sealed letters. Keep it somewhere private.\nmanifest.json preserves record IDs and metadata. Files are named with their record IDs. This is a portable export, not a one-click restore package.\nNo authentication tokens or server credentials are included.\n');for(const [i,f]of files.entries()){if(signal.aborted)throw new DOMException('Cancelled','AbortError');progress(`Backing up ${i+1}/${files.length}: ${f.path.split('/').at(-1)}`);const response=await media(f.url,signal),item=new ZipPassThrough(f.path);zip.add(item);const reader=response.body?.getReader();if(!reader)throw new Error('A download stream was unavailable.');let received=0;while(true){const {done,value}=await reader.read();if(done)break;received+=value.byteLength;item.push(value);}if(received!==f.size)throw new Error('A media file was incomplete. Please retry the backup.');item.push(new Uint8Array(),true);}zip.end();const blob=await done;if(signal.aborted)throw new DOMException('Cancelled','AbortError');downloadBlob(blob,`YC_Backup_${new Date().toISOString().slice(0,10)}.zip`);}catch(e){zip.terminate();chunks.length=0;throw e;}}
+export async function exportBackup(progress:(s:string)=>void,signal:AbortSignal){
+ const name=`YC_Backup_${new Date().toISOString().slice(0,10)}.zip`;
+ type DiskWriter={write:(data:Uint8Array)=>Promise<void>;close:()=>Promise<void>;abort:()=>Promise<void>};
+ const picker=(window as unknown as {showSaveFilePicker?:(options:unknown)=>Promise<{createWritable:()=>Promise<DiskWriter>}>}).showSaveFilePicker;
+ // Must request the file handle during the original click's user activation.
+ const handle=picker?await picker({suggestedName:name,types:[{description:'Archive ZIP',accept:{'application/zip':['.zip']}}]}):null;
+ const disk=handle?await handle.createWritable():null;
+ const chunks:Uint8Array[]=[];let zip:import('fflate').Zip|undefined;
+ try{
+  const {Zip,ZipPassThrough,strToU8}=await import('fflate');
+  const manifest=await request('/api/backup',{method:'POST',body:JSON.stringify({confirmFullArchive:true})});
+  const token=manifest.exportToken;delete manifest.exportToken;
+  const files:{path:string;url:string;size:number}[]=[];
+  const safe=(value:string)=>value.replace(/[^\p{L}\p{N}._-]/gu,'_').slice(0,150);
+  for(const p of manifest.photos as Photo[])files.push({path:`media/${p.id}-${safe(p.filename)}`,url:'/api/media/'+p.id,size:p.size});
+  for(const a of manifest.assets as Asset[])files.push({path:`attachments/${a.id}-${safe(a.filename)}`,url:`/api/assets/${a.id}?export=${encodeURIComponent(token)}`,size:a.size});
+  // Blob fallback retains the whole ZIP in browser memory. Avoid starting an
+  // unbounded archive on browsers without streaming file access.
+  const fallbackLimit=256*1024*1024;
+  if(!disk&&files.reduce((n,f)=>n+f.size,0)>fallbackLimit)throw new Error('This archive is too large for an in-memory download. Open it in desktop Edge or Chrome with Save File support to stream the ZIP to disk.');
+  manifest.files=files.map(({path,size})=>({path,size}));
+  try{manifest.displayPreferences=JSON.parse(localStorage.getItem('yc-display-preferences')||'null');}catch{manifest.displayPreferences=null;}
+  let zipError:Error|null=null,final=false,zipBytes=0;
+  zip=new Zip((err,data,last)=>{if(err){zipError=err;return;}if(data){zipBytes+=data.length;chunks.push(data);}if(last)final=true;});
+  async function flush(){
+   if(signal.aborted)throw new DOMException('Cancelled','AbortError');
+   if(zipError)throw zipError;
+   // The existing encoder writes classic ZIP offsets, not ZIP64.
+   if(zipBytes>=0xffffffff||files.length+2>=65535)throw new Error('This archive exceeds the ZIP format supported by this exporter. No incomplete backup has been saved.');
+   if(disk){for(const chunk of chunks)await disk.write(chunk);chunks.length=0;}
+   else if(zipBytes>fallbackLimit)throw new Error('The ZIP exceeds this browser’s memory-download limit. Use desktop Edge or Chrome with Save File support.');
+  }
+  function addText(path:string,value:string){const file=new ZipPassThrough(path);zip!.add(file);file.push(strToU8(value),true);}
+  addText('manifest.json',JSON.stringify(manifest,null,2));
+  addText('READ_ME.txt','Yuliya × Chih-hsing — complete archive backup, format v5\n\nPrivate JSON records and media, including sealed future letters. No authentication tokens or server credentials are included. This is a portable export, not a one-click restore package. Encrypt this ZIP separately for safe storage.\n');
+  await flush();
+  for(const [i,file] of files.entries()){
+   if(signal.aborted)throw new DOMException('Cancelled','AbortError');
+   progress(`Backing up ${i+1}/${files.length}: ${file.path.split('/').at(-1)}`);
+   const response=await media(file.url,signal),item=new ZipPassThrough(file.path);zip.add(item);
+   const reader=response.body?.getReader();if(!reader)throw new Error('A download stream was unavailable.');
+   let received=0;
+   try{while(true){const r=await reader.read();if(r.done)break;received+=r.value.length;if(received>file.size)throw new Error('A media file changed during backup. Please retry.');item.push(r.value);await flush();}}
+   finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
+   if(received!==file.size)throw new Error('A media file was incomplete. Please retry the backup.');
+   item.push(new Uint8Array(),true);await flush();
+  }
+  zip.end();await flush();if(!final)throw new Error('The ZIP could not be completed.');
+  if(disk)await disk.close();else downloadBlob(new Blob(chunks as BlobPart[],{type:'application/zip'}),name);
+ }catch(e){zip?.terminate();await disk?.abort().catch(()=>{});throw e;}
+ finally{chunks.length=0;}
+}
